@@ -3,6 +3,7 @@ import { Sidebar } from "./components/Sidebar";
 import { ChatArea } from "./components/ChatArea";
 import { DetectorAI } from "./components/DetectorAI";
 import { MobileMenuButton } from "./components/MobileMenuButton";
+import { SettingsModal } from "./components/SettingsModal";
 import { chatWithBot } from "./services/api";
 import { Menu } from "lucide-react";
 import "./styles/index.css";
@@ -11,6 +12,7 @@ import "./styles/index.css";
 export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Collapsed by default (Gemini style)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Settings modal state
   const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'detector'
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
@@ -455,6 +457,15 @@ export default function App() {
     }
   };
 
+  const handleClearAllHistory = () => {
+    if (isLoading && abortControllerRef.current) abortControllerRef.current.abort();
+    localStorage.removeItem(SESSIONS_KEY);
+    localStorage.removeItem(CURRENT_SESSION_KEY);
+    setSessions([]);
+    setCurrentSessionId(null);
+    setIsSettingsOpen(false);
+  };
+
   return (
     <div className="flex h-[100dvh] overflow-hidden relative font-sans bg-[#FFFDF6]">
       {isMobileMenuOpen && (
@@ -473,6 +484,7 @@ export default function App() {
         <Sidebar
           isOpen={isSidebarOpen}
           onToggleSidebar={setIsSidebarOpen}
+          onOpenSettings={() => setIsSettingsOpen(true)}
           sessions={sessions}
           currentSessionId={currentSessionId}
           currentView={currentView}
@@ -510,6 +522,11 @@ export default function App() {
       <MobileMenuButton 
         isOpen={isMobileMenuOpen}
         onToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      />
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+        onClearHistory={handleClearAllHistory}
       />
     </div>
   );

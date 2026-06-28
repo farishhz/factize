@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, MessageSquare, Trash2, ShieldCheck, Search, ScanLine, MessageCircle, Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Plus, MessageSquare, Trash2, ShieldCheck, Search, ScanLine, MessageCircle, Menu, PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 export function Sidebar({ 
   isOpen, 
   onToggleSidebar, 
+  onOpenSettings,
   sessions, 
   currentSessionId, 
   currentView, 
@@ -174,8 +175,22 @@ export function Sidebar({
             </div>
           </div>
 
-          {/* Bottom: Profile icon */}
+          {/* Bottom: Settings & Profile */}
           <div className="mt-auto flex flex-col gap-3 items-center">
+            {/* Settings trigger button */}
+            <div className="relative group">
+              <button 
+                onClick={onOpenSettings}
+                className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A]"
+                title="Pengaturan"
+              >
+                <Settings className="w-4.5 h-4.5" />
+              </button>
+              <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#21302A] text-[#FFFDF6] text-xs px-2.5 py-1.5 rounded-md shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans z-50 font-semibold tracking-wide">
+                Pengaturan
+              </div>
+            </div>
+
             <div className="relative group">
               <div className="w-10 h-10 rounded-[10px] overflow-hidden shadow-xs border border-[#21302A]/8 flex items-center justify-center bg-white cursor-help">
                 <img src="/logo1.png" alt="Factize" className="w-full h-full object-cover" />
@@ -316,8 +331,17 @@ export function Sidebar({
           </div>
         </div>
 
-        {/* AI Profile card */}
-        <div className="p-4 border-t border-[#21302A]/8 select-none">
+        {/* AI Profile card & Settings */}
+        <div className="p-4 border-t border-[#21302A]/8 select-none flex flex-col gap-2">
+          {/* Settings Trigger */}
+          <button 
+            onClick={onOpenSettings}
+            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-semibold text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A] cursor-pointer"
+          >
+            <Settings className="w-4.5 h-4.5" />
+            Pengaturan
+          </button>
+          
           <div className="bg-[#F4F7F6] rounded-[8px] p-3 border border-[#21302A]/8">
             <div className="flex items-center gap-3">
               <div className="relative flex-shrink-0">

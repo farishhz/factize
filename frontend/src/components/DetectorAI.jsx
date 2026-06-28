@@ -133,8 +133,16 @@ export function DetectorAI() {
       formData.append("file", file);
       
       const apiBase = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      
+      const headers = {};
+      const customHfToken = localStorage.getItem("sifakta_hf_token");
+      if (customHfToken) {
+        headers["X-HF-Token"] = customHfToken;
+      }
+
       const response = await fetch(`${apiBase}/api/scan-image`, {
         method: "POST",
+        headers,
         body: formData
       });
       

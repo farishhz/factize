@@ -191,6 +191,26 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, messages, onSendMessa
     }
   };
 
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (items) {
+      const pastedFiles = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            const pastedFile = new File([file], `pasted_image_${Date.now()}.png`, { type: file.type });
+            pastedFiles.push(pastedFile);
+          }
+        }
+      }
+      if (pastedFiles.length > 0) {
+        e.preventDefault();
+        setAttachments((prev) => [...prev, ...pastedFiles]);
+      }
+    }
+  };
+
   const handleFileChange = (e) => {
     const files = e.target.files;
     if (files) setAttachments(Array.from(files));
@@ -1099,6 +1119,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, messages, onSendMessa
                   e.target.style.height = `${e.target.scrollHeight}px`;
                 }}
                 onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
                 rows={1}
                 placeholder="Ketik rumor, atau tempel link..."
                 className="flex-1 bg-transparent outline-none text-[#21302A] placeholder:text-[#21302A]/30 text-[15px] resize-none overflow-hidden min-h-[24px] md:min-h-[40px] px-2 py-1 md:px-3 md:pt-3 md:pb-2"

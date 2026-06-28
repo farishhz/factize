@@ -1,80 +1,138 @@
-# si-FAKTA
+# Factize AI
 
-**si-FAKTA** adalah aplikasi berbasis web yang berfungsi sebagai asisten *chatbot* cerdas (AI) untuk mendeteksi dan mencari kebenaran mengenai suatu berita atau klaim. Aplikasi ini mampu menganalisis berbagai jenis masukan seperti teks, dokumen (PDF, TXT), hingga gambar (*screenshot* berita) untuk menentukan apakah informasi tersebut kemungkinan fakta atau hoaks.
+Factize AI adalah platform asisten berbasis kecerdasan buatan (AI) yang dirancang khusus untuk memverifikasi fakta, menganalisis rumor, serta mendeteksi keaslian informasi dan citra (gambar). Aplikasi ini dirancang dengan antarmuka modern premium serta arsitektur backend cepat berbasis FastAPI untuk menyaring hoaks secara akurat menggunakan Retrieval-Augmented Generation (RAG).
 
-## 🚀 Teknologi yang Digunakan
+## Fitur Utama
 
-Aplikasi ini dibangun menggunakan arsitektur modern yang dipisah menjadi dua bagian utama:
+1. Verifikasi Klaim Berbasis RAG: Sistem melakukan pencarian internet dinamis menggunakan mesin pencarian DuckDuckGo untuk memperkuat keaslian data pendukung secara real-time.
+2. Penilai Kueri Cerdas (Guardrails): Sistem memotong proses pencarian web jika kueri pengguna terdeteksi di luar topik cek fakta (seperti resep masakan, pemrograman, atau matematika umum) guna menghemat kuota API serta menjaga fokus asisten AI.
+3. Deteksi Manipulasi Gambar (Hybrid ELA): Mengintegrasikan pemindai Error Level Analysis (ELA) lokal dengan model klasifikasi citra deep learning Hugging Face untuk mendeteksi rekayasa digital pada gambar.
+4. Lampiran Fleksibel: Mendukung unggah berkas berbasis Drag-and-Drop serta fitur Tempel Gambar (Ctrl+V) langsung dari clipboard ke kolom input chat.
+5. Manajemen Kredensial Mandiri yang Aman: Pengguna dapat menghubungkan Kunci API Gemini dan Token Hugging Face pribadi. Kredensial disimpan secara lokal di peramban pengguna (localStorage) dan dikirim secara stateless via HTTPS tanpa disimpan di database backend.
+6. Sidebar Interaktif & Pencarian Riwayat: Navigasi sidebar collapsible mirip Google Gemini yang mendukung pencarian kata kunci riwayat serta pembuatan sesi obrolan baru.
 
-- **Frontend (Antarmuka):** Dibangun menggunakan **React.js** (dengan *build tool* Vite). Antarmuka didesain secara khusus dengan *Vanilla CSS* untuk memberikan tampilan yang *premium*, modern (Dark Mode), dinamis, serta mendukung fitur *drag-and-drop* untuk pengunggahan media.
-- **Backend (Otak Sistem):** Menggunakan **Python** dengan *framework* **FastAPI**. Bertugas sebagai jembatan yang cepat dan tangguh untuk menerima *request* dari Frontend, memproses media (ekstraksi PDF via PyMuPDF dan OCR gambar via Tesseract), lalu mengirimkannya ke **Google Gemini AI** untuk dianalisis.
+## Arsitektur Teknologi
 
-## 📋 Prasyarat
+- **Frontend:** React.js, Vite, Lucide Icons, dan Motion (Framer Motion) untuk animasi mikro premium.
+- **Backend:** FastAPI (Python), Uvicorn, Google GenAI SDK, PyMuPDF (ekstraksi PDF), dan Tesseract-OCR (Optical Character Recognition).
 
-Sebelum menjalankan aplikasi, pastikan komputer Anda telah terinstal perangkat lunak berikut:
-1. **Node.js** (untuk menjalankan frontend React/Vite)
-2. **Python 3.10+** (untuk backend FastAPI)
-3. **Tesseract-OCR** (Wajib untuk fitur ekstraksi teks dari gambar). 
-   - *Pengguna Linux/Ubuntu dapat menginstalnya dengan perintah:* `sudo apt-get install tesseract-ocr tesseract-ocr-ind`
-4. **API Key Gemini** dari [Google AI Studio](https://aistudio.google.com/app/apikey)
+## Prasyarat Sistem
 
-## 🛠️ Cara Instalasi & Menjalankan Aplikasi
+Sebelum melakukan instalasi, pastikan sistem Anda telah terpasang perangkat lunak berikut:
+- Node.js (versi 18 ke atas) dan npm
+- Python (versi 3.10 ke atas)
+- Tesseract-OCR (diperlukan untuk ekstraksi teks dari gambar)
+  - Windows: Unduh installer Tesseract dari dokumentasi resmi dan tambahkan jalur instalasi ke Environment Variables PATH.
+  - Linux/Ubuntu: Jalankan perintah `sudo apt-get install tesseract-ocr tesseract-ocr-ind`
+  - macOS: Jalankan perintah `brew install tesseract`
 
-Anda perlu menjalankan *server* Backend dan Frontend secara bersamaan di terminal yang berbeda.
+## Cara Instalasi dan Konfigurasi
 
-### 1. Setup & Jalankan Backend (FastAPI)
+### 1. Kloning Repositori
 
-Buka terminal pertama, arahkan ke direktori proyek, lalu jalankan:
+Buka terminal Anda dan jalankan perintah berikut untuk mengkloning repositori proyek ke direktori lokal:
+
+```bash
+git clone https://github.com/username/factize-ai.git
+cd factize-ai
+```
+
+### 2. Setup dan Konfigurasi Backend
+
+Arahkan terminal ke dalam direktori backend:
 
 ```bash
 cd backend
+```
 
-# Buat virtual environment (hanya untuk pertama kali)
-python3 -m venv venv
+Buat virtual environment Python baru untuk isolasi dependensi:
 
-# Aktifkan virtual environment
-source venv/bin/activate  # Untuk Linux/macOS
-# venv\Scripts\activate   # Untuk Windows
+```bash
+python -m venv venv
+```
 
-# Instal semua dependensi pustaka
+Aktifkan virtual environment tersebut:
+- Windows (PowerShell):
+  ```powershell
+  .\venv\Scripts\Activate.ps1
+  ```
+- Windows (CMD):
+  ```cmd
+  .\venv\Scripts\activate.bat
+  ```
+- Linux / macOS:
+  ```bash
+  source venv/bin/activate
+  ```
+
+Instal seluruh dependensi pustaka Python yang dideklarasikan:
+
+```bash
 pip install -r requirements.txt
 ```
 
-**Konfigurasi API Key:**
-Salin template konfigurasi `.env.example` menjadi `.env`:
+Konfigurasikan variabel lingkungan dengan menyalin berkas contoh:
+
 ```bash
 cp .env.example .env
 ```
-Setelah itu, buka file `.env` tersebut dan masukkan API Key Gemini Anda:
+
+Buka berkas `.env` dan lengkapi konfigurasi berikut dengan kunci API Anda:
+
 ```env
-GEMINI_API_KEY=KODE_API_GEMINI_ANDA_DI_SINI
+GEMINI_API_KEY=kunci_api_gemini_anda
+HF_TOKEN=token_hugging_face_anda (opsional, jika kosong sistem akan meminta kunci dari browser pengguna)
+TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe (sesuaikan dengan path instalasi Tesseract di komputer Anda)
 ```
 
-**Jalankan Server:**
+Jalankan server backend FastAPI menggunakan Uvicorn:
+
 ```bash
 uvicorn app.main:app --reload
 ```
-*Backend akan berjalan di `http://localhost:8000`.*
+Server backend akan aktif pada alamat `http://localhost:8000`.
 
----
+### 3. Setup dan Konfigurasi Frontend
 
-### 2. Setup & Jalankan Frontend (React)
-
-Buka jendela terminal kedua, arahkan ke direktori proyek, lalu jalankan:
+Buka jendela terminal baru, lalu arahkan ke direktori frontend:
 
 ```bash
 cd frontend
+```
 
-# Instal semua paket dependensi NPM
+Instal seluruh paket dependensi Node.js:
+
+```bash
 npm install
+```
 
-# Jalankan server frontend
+Salin berkas konfigurasi variabel lingkungan:
+
+```bash
+cp .env.example .env.local
+```
+
+Buka berkas `.env.local` dan tentukan alamat endpoint API backend:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+Jalankan server pengembangan frontend Vite:
+
+```bash
 npm run dev
 ```
-*Frontend akan berjalan di `http://localhost:5173`.*
+Aplikasi frontend akan aktif dan dapat diakses melalui peramban pada alamat `http://localhost:5173`.
 
-## 💡 Cara Penggunaan
-1. Buka browser Anda dan akses `http://localhost:5173`.
-2. Ketik klaim berita, teks, atau salin tautan di kolom percakapan dan tekan **Kirim**.
-3. Jika Anda memiliki tangkapan layar berita (gambar) atau dokumen PDF, Anda bisa langsung menarik (*drag*) file tersebut ke area kotak unggah (*upload*).
-4. si-FAKTA akan mengekstrak informasi yang ada, dan menggunakan AI untuk memberikan analisis objektivitas dari data tersebut.
+## Panduan Penggunaan Aplikasi
+
+1. Buka peramban dan navigasikan ke alamat `http://localhost:5173`.
+2. Gunakan kolom obrolan untuk menuliskan klaim berita atau isu yang ingin diverifikasi.
+3. Anda dapat menyeret (drag) berkas gambar/PDF ke dalam halaman, atau menekan Ctrl+V untuk menempelkan tangkapan layar langsung dari clipboard Anda.
+4. Klik tombol Pengaturan (Settings) di bagian pojok kiri bawah untuk memasukkan Kunci API Gemini atau Token Hugging Face pribadi, atau menghapus riwayat obrolan secara permanen.
+5. Gunakan fitur Pencarian Riwayat pada sidebar untuk memfilter sesi obrolan berdasarkan kata kunci riwayat terdahulu.
+
+## Kontribusi dan Lisensi
+
+Aplikasi ini dikembangkan untuk tujuan penyaringan informasi dan cek fakta. Segala bentuk kontribusi pengembangan dipersilakan dengan membuat Pull Request atau melaporkan Issue pada repositori ini.

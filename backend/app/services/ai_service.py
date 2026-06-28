@@ -206,6 +206,17 @@ async def cari_konteks_web(query: str):
 system_prompt = """
 Anda adalah Factize AI, asisten verifikasi informasi yang cerdas, analitis, taktis, objektif, komunikatif, dan ramah. Tugas Anda adalah memverifikasi klaim pengguna secara komprehensif berdasarkan fakta yang ditemukan pada referensi pencarian web dan logika analisis yang kuat, tanpa memberikan respons yang kaku secara keseluruhan atau malas (AI Slop).
 
+# BATASAN KETAT PERSONA & RUANG LINGKUP (GUARDRAILS)
+1. **Fokus Tunggal pada Cek Fakta**: Anda HANYA melayani permintaan yang berkaitan dengan pemeriksaan kebenaran berita, verifikasi rumor, klarifikasi isu, analisis keaslian gambar (ELA), dan pelurusan hoaks.
+2. **Penolakan Permintaan Luar Lingkup (Mandatory Rejection)**:
+   - JANGAN PERNAH melayani instruksi di luar cek fakta, seperti menulis/membuat kode pemrograman (Python, JavaScript, C++, dll.), menyelesaikan soal matematika/sains, menulis esai kreatif/puisi/cerpen, atau bertindak sebagai asisten umum serbaguna.
+   - Jika pengguna meminta hal-hal tersebut (contoh: "buatkan script Python untuk menghitung luas persegi panjang"), Anda **WAJIB MENOLAK** secara halus, sopan, namun tegas menggunakan template penolakan di bawah.
+3. **Pengecualian Diskusi Teknis**:
+   - Jika pengguna mendiskusikan topik pemrograman atau teknis dalam konteks rumor/berita (misalnya: menanyakan kebenaran isu kebocoran kode sumber pemerintah, atau rumor tentang virus Python baru), Anda diperbolehkan memverifikasi rumor tersebut secara objektif. Namun, Anda tetap dilarang keras menuliskan kode/script fungsional baru untuk pengguna.
+4. **Format Respon Penolakan**:
+   Jika permintaan di luar lingkup, kembalikan respon bersahabat seperti berikut:
+   "Maaf, sebagai Factize AI Assistant, fokus utama saya adalah membantu Anda memverifikasi fakta, rumor, atau berita hoaks. Saya tidak dapat membantu membuat script pemrograman atau tugas di luar cek fakta. Silakan masukkan informasi atau rumor yang ingin Anda periksa kebenarannya!"
+
 # CONTEXT & MEMORY MANAGEMENT (CRITICAL)
 - Anda memiliki akses ke riwayat percakapan. Selalu baca pesan-pesan sebelumnya sebelum menjawab.
 - Jika pengguna memberikan perintah lanjutan (misalnya, "Ringkaskan lebih padat", "Tunjukkan sumbernya", "Jelaskan poin ke-2"), Anda WAJIB merujuk pada konteks analisis cek fakta sebelumnya. Jangan pernah menganggap percakapan baru dimulai jika ada riwayat di atas.
@@ -295,11 +306,44 @@ Sebelum merespons, klasifikasikan input pengguna:
 """
 
 
-async def analyze_chat_stream(messages, model_name='gemini-2.5-flash'):
+async def analyze_chat_stream(messages, model_name='gemini-2.5-flash', custom_api_key=None):
     """Fungsi asinkron untuk memproses riwayat obrolan dan mengirim stream (SSE)."""
-    if not client:
+    if custom_api_key:
+        try:
+            client_to_use = genai.Client(api_key=custom_api_key)
+        except Exception as e:
+            yield f"data: {json.dumps({'error': f'Kunci API Gemini kustom tidak valid: {str(e)}'})}\n\n"
+            return
+    else:
+        client_to_use = client
+
+    if not client_to_use:
         yield f"data: {json.dumps({'error': 'Sistem AI (Gemini) belum dikonfigurasi dengan API Key yang valid di file .env'})}\n\n"
         return
+
+    needs_search = False
+    # Deteksi cepat apakah kueri terakhir membutuhkan pencarian berita/hoaks di internet
+    if messages:
+        last_msg = messages[-1]
+        if last_msg.role == "user" and len(last_msg.content.strip()) > 3:
+            try:
+                eval_text = re.sub(r'https?://\S+|www\.\S+', '', last_msg.content).strip()
+                if eval_text:
+                    test_response = await client_to_use.aio.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=f"Tentukan apakah query pengguna berikut merupakan klaim spesifik, isu, atau berita yang membutuhkan pencarian berita terkini, klarifikasi rumor, atau cek fakta hoaks di internet. Jawab 'YA' jika membutuhkan pencarian informasi berita/hoaks terbaru, atau 'TIDAK' jika query berupa obrolan biasa, kelanjutan/pernyataan konfirmasi (seperti 'tetap berikan saja', 'tidak apa-apa', 'lanjutkan', 'jelaskan'), panduan umum (seperti cara olahraga, coding, matematika, resep), atau sekadar sapaan.\nQuery: {eval_text}",
+                        config=types.GenerateContentConfig(
+                            max_output_tokens=5,
+                            temperature=0.0
+                        )
+                    )
+                    test_text = test_response.text.strip().upper()
+                    if "YA" in test_text:
+                        needs_search = True
+            except Exception as ce:
+                print(f"Gagal melakukan klasifikasi intent: {ce}")
+                # Fallback aman ke True agar tidak memblokir cek fakta jika terjadi error API
+                needs_search = True
 
     formatted_contents = []
     raw_results = []
@@ -357,7 +401,7 @@ async def analyze_chat_stream(messages, model_name='gemini-2.5-flash'):
                     content_text += f"\n\n[Sistem: Gagal membaca isi artikel pada tautan ({url}) atau konten kosong. Mohon beri tahu user bahwa artikel tidak dapat diakses.]"
             
             # Jika scraping gagal atau tidak ada URL sama sekali, fallback ke RAG
-            if not url_scraped and len(content_text.strip()) > 10:
+            if needs_search and not url_scraped and len(content_text.strip()) > 10:
                 ignore_kw = ['ringkas', 'jelas', 'halo', 'hi', 'sumber', 'lanjut', 'tadi']
                 if not any(k in content_text.lower() for k in ignore_kw):
                     # Cari referensi search engine jika input berupa klaim/pertanyaan
@@ -405,7 +449,7 @@ async def analyze_chat_stream(messages, model_name='gemini-2.5-flash'):
         current_date = datetime.datetime.now().strftime("%A, %d %B %Y")
         dynamic_system_prompt = system_prompt + f"\n\n# CURRENT DATE & TIME AWARENESS\nTanggal hari ini adalah: {current_date}. Pastikan Anda mengetahui bahwa ini adalah masa sekarang. Jika ada artikel atau URL dengan tanggal ini atau sebelumnya, itu BUKAN berita dari masa depan."
         
-        response_stream = await client.aio.models.generate_content_stream(
+        response_stream = await client_to_use.aio.models.generate_content_stream(
             model=model_name,
             contents=formatted_contents,
             config=types.GenerateContentConfig(

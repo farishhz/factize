@@ -11,17 +11,19 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 MODEL_ID = "Ateeqq/ai-vs-human-image-detector"
 API_URL = f"https://router.huggingface.co/hf-inference/models/{MODEL_ID}"
 
-def analyze_hybrid_image(file_bytes: bytes):
+def analyze_hybrid_image(file_bytes: bytes, hf_token: str = None):
     try:
         # Load image locally for ELA analysis
         img = Image.open(io.BytesIO(file_bytes)).convert('RGB')
+        
+        token_to_use = hf_token if hf_token else HF_TOKEN
         
         # --- TAHAP 1: PREDIKSI HUGGING FACE INFERENCE API ---
         headers = {
             "Content-Type": "image/jpeg"
         }
-        if HF_TOKEN:
-            headers["Authorization"] = f"Bearer {HF_TOKEN}"
+        if token_to_use:
+            headers["Authorization"] = f"Bearer {token_to_use}"
             
         is_ai = False
         confidence_score = 50.0
