@@ -211,7 +211,7 @@ export function Sidebar({
         {/* Brand lockup */}
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-center justify-between mb-6 px-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 pl-12 lg:pl-0">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm overflow-hidden flex-shrink-0">
                 <img src="/logo1.png" alt="Factize Logo" className="w-full h-full object-cover" />
               </div>

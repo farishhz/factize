@@ -488,7 +488,10 @@ export default function App() {
           sessions={sessions}
           currentSessionId={currentSessionId}
           currentView={currentView}
-          onViewChange={setCurrentView}
+          onViewChange={(view) => {
+            setCurrentView(view);
+            setIsMobileMenuOpen(false);
+          }}
           onNewCheck={handleNewCheck}
           onSelectSession={handleSelectSession}
           onDeleteSession={handleDeleteSession}
@@ -511,8 +514,8 @@ export default function App() {
       ) : (
         <div className="flex-1 flex flex-col h-full bg-[#FFFDF6]">
           {/* Top Header wrapper for DetectorAI */}
-          <div className="h-16 px-4 md:px-8 border-b border-[#21302A]/8 flex items-center bg-white z-20">
-            <h1 className="text-md font-bold text-[#21302A] ml-2">AI Image Detector</h1>
+          <div className="h-16 px-4 pl-14 lg:pl-6 md:px-8 border-b border-[#21302A]/8 flex items-center bg-white z-20">
+            <h1 className="text-md font-bold text-[#21302A]">AI Image Detector</h1>
           </div>
           <div className="flex-1 overflow-y-auto">
             <DetectorAI />
