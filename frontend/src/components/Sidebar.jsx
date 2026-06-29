@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, MessageSquare, Trash2, ShieldCheck, Search, ScanLine, MessageCircle, Menu, PanelLeftClose, PanelLeftOpen, Settings, X } from "lucide-react";
+import { Plus, MessageSquare, Trash2, ShieldCheck, Search, ScanLine, MessageCircle, Menu, PanelLeftClose, PanelLeftOpen, Settings, X, Download, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { translations } from "../services/translations";
 
@@ -15,7 +15,9 @@ export function Sidebar({
   onNewCheck, 
   onSelectSession, 
   onDeleteSession,
-  language
+  language,
+  deferredPrompt,
+  onInstallApp
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -344,6 +346,37 @@ export function Sidebar({
             )}
           </div>
         </div>
+
+        {/* PWA Promotion Card (Above profile card) */}
+        {!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) && !(navigator && navigator.standalone) && (
+          <div className="px-4 pb-3 select-none">
+            <button
+              onClick={() => {
+                if (deferredPrompt) {
+                  onInstallApp();
+                } else {
+                  onOpenSettings();
+                }
+              }}
+              className="w-full bg-[#E5EBE8] hover:bg-[#D9E2DE] border border-[#21302A]/8 hover:border-[#21302A]/15 rounded-xl p-3 flex items-center justify-between transition-all duration-200 cursor-pointer text-left active:scale-[0.98] group"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white shadow-2xs overflow-hidden flex items-center justify-center flex-shrink-0">
+                  <img src="/logo1.png" alt="Factize" className="w-5.5 h-5.5 object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[12px] font-bold text-[#21302A] leading-tight mb-0.5">
+                    {language === "en" ? "Install Factize App" : "Instal Aplikasi Factize"}
+                  </p>
+                  <p className="text-[9px] text-[#5C6E60] font-bold uppercase tracking-wider">
+                    Support Android & iOS
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-[#21302A]/40 group-hover:text-[#21302A] transition-colors" />
+            </button>
+          </div>
+        )}
 
         {/* AI Profile card & Settings */}
         <div className="p-4 border-t border-[#21302A]/8 select-none">

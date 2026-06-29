@@ -3,7 +3,7 @@ import { X, ShieldAlert, Key, Trash2, Eye, EyeOff, CheckCircle2, XCircle, Loader
 import { verifyGeminiKey, verifyHfToken } from "../services/api";
 import { translations } from "../services/translations";
 
-export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLanguageChange }) {
+export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLanguageChange, deferredPrompt, onInstallApp }) {
   const [activeTab, setActiveTab] = useState("umum");
   const [geminiKey, setGeminiKey] = useState("");
   const [hfToken, setHfToken] = useState("");
@@ -141,6 +141,31 @@ export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLan
                     {t.langEn}
                   </button>
                 </div>
+              </div>
+
+              {/* PWA Installer */}
+              <div className="border-b border-[#21302A]/8 pb-6">
+                <h4 className="font-bold text-[#21302A] text-sm mb-1.5">{t.pwaTitle}</h4>
+                <p className="text-xs text-[#5C6E60] mb-4 leading-relaxed font-medium">
+                  {t.pwaDesc}
+                </p>
+                
+                {deferredPrompt ? (
+                  <button
+                    onClick={onInstallApp}
+                    className="w-full py-3 px-4 rounded-xl border border-[#21302A] bg-[#21302A] text-white text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm hover:bg-[#2F4236]"
+                  >
+                    {t.pwaInstallBtn}
+                  </button>
+                ) : (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator && navigator.standalone) ? (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-800 font-semibold text-center">
+                    ✓ {t.pwaInstalled}
+                  </div>
+                ) : (
+                  <div className="bg-[#EFF3F1] border border-[#21302A]/8 rounded-xl p-3.5 text-[11px] text-[#5C6E60] leading-relaxed font-medium">
+                    ℹ️ {t.pwaIosTip}
+                  </div>
+                )}
               </div>
 
               {/* History Clearance */}

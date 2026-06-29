@@ -4,9 +4,8 @@ import { ChatArea } from "./components/ChatArea";
 import { DetectorAI } from "./components/DetectorAI";
 import { MobileTopBar } from "./components/MobileTopBar";
 import { SettingsModal } from "./components/SettingsModal";
+import { InfoModal } from "./components/InfoModal";
 import { chatWithBot } from "./services/api";
-import { Menu, X, Info, Brain, Zap, Globe, Cpu, ScanLine, FileSearch, AlertTriangle } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
 import { translations } from "./services/translations";
 import "./styles/index.css";
 
@@ -18,9 +17,8 @@ export default function App() {
   const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'detector'
   const [isLoading, setIsLoading] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [hasReadToBottom, setHasReadToBottom] = useState(false);
   const [language, setLanguage] = useState(() => localStorage.getItem("sifakta_language") || "id");
-  const scrollRef = useRef(null);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
   const handleLanguageChange = (lang) => {
     setLanguage(lang);
@@ -28,6 +26,30 @@ export default function App() {
   };
 
   const t = translations[language];
+
+  // Capture PWA install prompt
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", () => {
+      setDeferredPrompt(null);
+    });
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      setDeferredPrompt(null);
+    }
+  };
 
   // Tampilkan modal info otomatis pada kunjungan pertama kali
   useEffect(() => {
@@ -37,31 +59,6 @@ export default function App() {
       localStorage.setItem("sifakta_chat_visited", "true");
     }
   }, []);
-
-  const handleScroll = () => {
-    const element = scrollRef.current;
-    if (element) {
-      const isBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 5;
-      if (isBottom) {
-        setHasReadToBottom(true);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (showInfoModal) {
-      setTimeout(() => {
-        const element = scrollRef.current;
-        if (element) {
-          if (element.scrollHeight <= element.clientHeight) {
-            setHasReadToBottom(true);
-          } else {
-            setHasReadToBottom(false);
-          }
-        }
-      }, 100);
-    }
-  }, [showInfoModal]);
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
   const abortControllerRef = useRef(null);
   
@@ -544,6 +541,8 @@ export default function App() {
           onSelectSession={handleSelectSession}
           onDeleteSession={handleDeleteSession}
           language={language}
+          deferredPrompt={deferredPrompt}
+          onInstallApp={handleInstallApp}
         />
       </div>
       
@@ -584,200 +583,16 @@ export default function App() {
         onClearHistory={handleClearAllHistory}
         language={language}
         onLanguageChange={handleLanguageChange}
+        deferredPrompt={deferredPrompt}
+        onInstallApp={handleInstallApp}
       />
 
-      {/* ── Info Modal (Disclosure) optimized for mobile GPU & blurs ── */}
-      <AnimatePresence>
-        {showInfoModal && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#17221E]/75 lg:bg-[#17221E]/40 lg:backdrop-blur-md px-4 transform-gpu"
-            onClick={() => setShowInfoModal(false)}
-          >
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="bg-[#FFFDF6] border border-[#21302A]/10 shadow-[0_20px_50px_rgba(33,48,42,0.15)] rounded-3xl p-6 md:p-8 max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh] transform-gpu"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {currentView === 'chat' ? (
-                <>
-                  {/* Header */}
-                  <div className="flex items-center gap-4 mb-6 border-b border-[#21302A]/10 pb-4">
-                    <div className="p-3 bg-[#E5EBE8] text-[#21302A] rounded-2xl shadow-sm">
-                      <Brain className="w-7 h-7 text-indigo-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-serif font-bold text-2xl text-[#21302A]">{t.chatGuideTitle}</h3>
-                      <p className="text-xs text-[#5C6E60]">{t.chatGuideSub}</p>
-                    </div>
-                  </div>
-
-                  {/* Scrollable Content */}
-                  <div 
-                    ref={scrollRef}
-                    onScroll={handleScroll}
-                    className="text-[#5C6E60] text-[14px] leading-relaxed space-y-5 overflow-y-auto sidebar-scroll pr-2 flex-1 scrollbar-thin"
-                  >
-                    <p>
-                      {t.chatGuideIntro}
-                    </p>
-
-                    {/* Grid Fitur & Model */}
-                    <div className="space-y-3">
-                      <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
-                        <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Zap className="w-4.5 h-4.5 text-amber-500" fill="currentColor"/> {t.modelFlashTitle}
-                        </h4>
-                        <p className="text-xs text-[#5C6E60] leading-normal">
-                          {t.modelFlashDesc}
-                        </p>
-                      </div>
-
-                      <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
-                        <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Brain className="w-4.5 h-4.5 text-indigo-500"/> {t.modelProTitle}
-                        </h4>
-                        <p className="text-xs text-[#5C6E60] leading-normal">
-                          {t.modelProDesc}
-                        </p>
-                      </div>
-
-                      <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
-                        <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Globe className="w-4.5 h-4.5 text-blue-500"/> {t.webSearchTitle}
-                        </h4>
-                        <p className="text-xs text-[#5C6E60] leading-normal">
-                          {t.webSearchDesc}
-                        </p>
-                      </div>
-
-                      <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
-                        <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Cpu className="w-4.5 h-4.5 text-emerald-600"/> {t.typoTitle}
-                        </h4>
-                        <p className="text-xs text-[#5C6E60] leading-normal">
-                          {t.typoDesc}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* INFO PENTING: Konteks Percakapan (Memory) */}
-                    <div className="bg-amber-50/70 border border-amber-200/80 p-4 rounded-2xl flex gap-3 text-amber-950 shadow-inner">
-                      <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-[13px] text-amber-850 mb-1">{t.memoryTitle}</h4>
-                        <p className="text-[11px] leading-relaxed text-amber-900/85">
-                          {t.memoryDesc}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <div className="mt-6 pt-4 border-t border-[#21302A]/10">
-                    <button 
-                      disabled={!hasReadToBottom}
-                      onClick={() => setShowInfoModal(false)}
-                      className={`w-full py-3 rounded-2xl font-semibold transition-all duration-200 shadow-md ${
-                        hasReadToBottom 
-                          ? 'bg-[#21302A] text-[#FFFDF6] hover:bg-[#2F443C] active:scale-[0.98] cursor-pointer shadow-[#21302A]/10' 
-                          : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
-                      }`}
-                    >
-                      {hasReadToBottom ? t.agreeChat : t.agreeScroll}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Header */}
-                  <div className="flex items-center gap-4 mb-6 border-b border-[#21302A]/10 pb-4">
-                    <div className="p-3 bg-[#E5EBE8] text-[#21302A] rounded-2xl shadow-sm">
-                      <ScanLine className="w-7 h-7 text-[#21302A]" />
-                    </div>
-                    <div>
-                      <h3 className="font-serif font-bold text-2xl text-[#21302A]">{t.detectorGuideTitle}</h3>
-                      <p className="text-xs text-[#5C6E60]">{t.detectorGuideSub}</p>
-                    </div>
-                  </div>
-
-                  {/* Scrollable Content */}
-                  <div 
-                    ref={scrollRef}
-                    onScroll={handleScroll}
-                    className="text-[#5C6E60] text-[14px] leading-relaxed space-y-5 overflow-y-auto sidebar-scroll pr-2 flex-1 scrollbar-thin"
-                  >
-                    <p>
-                      {t.detectorGuideIntro}
-                    </p>
-
-                    {/* Grid Metrik */}
-                    <div className="space-y-3">
-                      <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
-                        <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Cpu className="w-4.5 h-4.5 text-indigo-650" /> {t.siglipTitle}
-                        </h4>
-                        <p className="text-xs text-[#5C6E60] leading-normal">
-                          {t.siglipDesc}
-                        </p>
-                      </div>
-
-                      <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
-                        <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <ScanLine className="w-4.5 h-4.5 text-emerald-600" /> {t.elaTitle}
-                        </h4>
-                        <p className="text-xs text-[#5C6E60] leading-normal">
-                          {t.elaDesc}
-                        </p>
-                      </div>
-
-                      <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
-                        <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <FileSearch className="w-4.5 h-4.5 text-amber-600" /> {t.exifTitle}
-                        </h4>
-                        <p className="text-xs text-[#5C6E60] leading-normal">
-                          {t.exifDesc}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* PEMBERITAHUAN PENTING */}
-                    <div className="bg-amber-50/70 border border-amber-200/80 p-4 rounded-2xl flex gap-3 text-amber-950 shadow-inner">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-[13px] text-amber-850 mb-1">{t.warningTitle}</h4>
-                        <p className="text-[11px] leading-relaxed text-amber-900/85">
-                          {t.warningDesc}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <div className="mt-6 pt-4 border-t border-[#21302A]/10">
-                    <button 
-                      disabled={!hasReadToBottom}
-                      onClick={() => setShowInfoModal(false)}
-                      className={`w-full py-3 rounded-2xl font-semibold transition-all duration-200 shadow-md ${
-                        hasReadToBottom 
-                          ? 'bg-[#21302A] text-[#FFFDF6] hover:bg-[#2F443C] active:scale-[0.98] cursor-pointer shadow-[#21302A]/10' 
-                          : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
-                      }`}
-                    >
-                      {hasReadToBottom ? t.agreeScan : t.agreeScroll}
-                    </button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <InfoModal 
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        currentView={currentView}
+        language={language}
+      />
     </div>
   );
 }

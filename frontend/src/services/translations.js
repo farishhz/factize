@@ -115,7 +115,12 @@ export const translations = {
     langSection: "Bahasa Utama",
     langDesc: "Pilih bahasa tampilan untuk antarmuka Factize.",
     langEn: "Bahasa Inggris (US)",
-    langId: "Bahasa Indonesia (ID)"
+    langId: "Bahasa Indonesia (ID)",
+    pwaTitle: "Aplikasi Factize PWA",
+    pwaDesc: "Pasang Factize di HP atau laptop Anda untuk akses instan dan performa offline yang lebih baik.",
+    pwaInstallBtn: "Instal Sekarang",
+    pwaInstalled: "Factize sudah terpasang di perangkat Anda.",
+    pwaIosTip: "Untuk perangkat iOS (Safari): Ketuk ikon 'Bagikan' (Share) di browser Anda, lalu pilih 'Tambahkan ke Layar Utama' (Add to Home Screen)."
   },
   en: {
     // General / Sidebar
@@ -233,6 +238,11 @@ export const translations = {
     langSection: "Display Language",
     langDesc: "Select the display language for the Factize interface.",
     langEn: "English (US)",
-    langId: "Indonesian (ID)"
+    langId: "Indonesian (ID)",
+    pwaTitle: "Factize PWA App",
+    pwaDesc: "Install Factize on your phone or laptop for instant access and better offline performance.",
+    pwaInstallBtn: "Install Now",
+    pwaInstalled: "Factize is already installed on your device.",
+    pwaIosTip: "For iOS devices (Safari): Tap the 'Share' icon in your browser, then select 'Add to Home Screen'."
   }
 };
