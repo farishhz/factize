@@ -1,6 +1,6 @@
 /* global __APP_VERSION__ */
 import React, { useState, useEffect } from "react";
-import { X, ShieldAlert, Key, Trash2, Eye, EyeOff, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { X, ShieldAlert, Key, Trash2, Eye, EyeOff, CheckCircle2, XCircle, Loader2, MessageSquare, Globe, Image, Smartphone, Code2, Server, Brain, Fingerprint } from "lucide-react";
 import { verifyGeminiKey, verifyHfToken } from "../services/api";
 import { translations } from "../services/translations";
 
@@ -368,21 +368,41 @@ export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLan
                 <div>
                   <h5 className="font-bold text-xs uppercase tracking-wider text-[#21302A]/40 mb-2">{t.featuresHeading}</h5>
                   <div className="space-y-2.5">
-                    <div className="bg-white p-3 rounded-xl border border-[#21302A]/5 shadow-2xs">
-                      <h6 className="font-bold text-xs text-[#21302A] mb-0.5">{t.feature1Title}</h6>
-                      <p className="text-[11px] text-[#5C6E60] leading-relaxed">{t.feature1Desc}</p>
+                    <div className="bg-white p-3 rounded-xl border border-[#21302A]/5 shadow-2xs flex gap-3 items-start">
+                      <div className="p-1.5 rounded-lg bg-[#2A3A34]/5 text-[#2A3A34] flex-shrink-0 mt-0.5">
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h6 className="font-bold text-xs text-[#21302A] mb-0.5">{t.feature1Title}</h6>
+                        <p className="text-[11px] text-[#5C6E60] leading-relaxed">{t.feature1Desc}</p>
+                      </div>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-[#21302A]/5 shadow-2xs">
-                      <h6 className="font-bold text-xs text-[#21302A] mb-0.5">{t.feature2Title}</h6>
-                      <p className="text-[11px] text-[#5C6E60] leading-relaxed">{t.feature2Desc}</p>
+                    <div className="bg-white p-3 rounded-xl border border-[#21302A]/5 shadow-2xs flex gap-3 items-start">
+                      <div className="p-1.5 rounded-lg bg-[#2A3A34]/5 text-[#2A3A34] flex-shrink-0 mt-0.5">
+                        <Globe className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h6 className="font-bold text-xs text-[#21302A] mb-0.5">{t.feature2Title}</h6>
+                        <p className="text-[11px] text-[#5C6E60] leading-relaxed">{t.feature2Desc}</p>
+                      </div>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-[#21302A]/5 shadow-2xs">
-                      <h6 className="font-bold text-xs text-[#21302A] mb-0.5">{t.feature3Title}</h6>
-                      <p className="text-[11px] text-[#5C6E60] leading-relaxed">{t.feature3Desc}</p>
+                    <div className="bg-white p-3 rounded-xl border border-[#21302A]/5 shadow-2xs flex gap-3 items-start">
+                      <div className="p-1.5 rounded-lg bg-[#2A3A34]/5 text-[#2A3A34] flex-shrink-0 mt-0.5">
+                        <Image className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h6 className="font-bold text-xs text-[#21302A] mb-0.5">{t.feature3Title}</h6>
+                        <p className="text-[11px] text-[#5C6E60] leading-relaxed">{t.feature3Desc}</p>
+                      </div>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-[#21302A]/5 shadow-2xs">
-                      <h6 className="font-bold text-xs text-[#21302A] mb-0.5">{t.feature4Title}</h6>
-                      <p className="text-[11px] text-[#5C6E60] leading-relaxed">{t.feature4Desc}</p>
+                    <div className="bg-white p-3 rounded-xl border border-[#21302A]/5 shadow-2xs flex gap-3 items-start">
+                      <div className="p-1.5 rounded-lg bg-[#2A3A34]/5 text-[#2A3A34] flex-shrink-0 mt-0.5">
+                        <Smartphone className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h6 className="font-bold text-xs text-[#21302A] mb-0.5">{t.feature4Title}</h6>
+                        <p className="text-[11px] text-[#5C6E60] leading-relaxed">{t.feature4Desc}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -390,12 +410,24 @@ export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLan
                 {/* Tech Stack */}
                 <div>
                   <h5 className="font-bold text-xs uppercase tracking-wider text-[#21302A]/40 mb-2">{t.stackHeading}</h5>
-                  <ul className="text-xs text-[#5C6E60] space-y-1.5 bg-[#F4F7F6] p-3 rounded-xl border border-[#21302A]/8 font-medium">
-                    <li className="flex items-center gap-1.5">⚡ {t.stackFrontend}</li>
-                    <li className="flex items-center gap-1.5">⚙️ {t.stackBackend}</li>
-                    <li className="flex items-center gap-1.5">🤖 {t.stackEngine}</li>
-                    <li className="flex items-center gap-1.5">🔍 {t.stackForensics}</li>
-                  </ul>
+                  <div className="text-xs text-[#5C6E60] space-y-2 bg-[#F4F7F6] p-3.5 rounded-xl border border-[#21302A]/8 font-medium">
+                    <div className="flex items-center gap-2">
+                      <Code2 className="w-3.5 h-3.5 text-[#5C6E60]" />
+                      <span>{t.stackFrontend}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Server className="w-3.5 h-3.5 text-[#5C6E60]" />
+                      <span>{t.stackBackend}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Brain className="w-3.5 h-3.5 text-[#5C6E60]" />
+                      <span>{t.stackEngine}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Fingerprint className="w-3.5 h-3.5 text-[#5C6E60]" />
+                      <span>{t.stackForensics}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Developer */}
