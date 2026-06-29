@@ -110,7 +110,34 @@ const PILL =
 const ACTION_BTN = 
   "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A] transition-colors active:scale-95 leading-none";
 
-export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages, onSendMessage, onEditSendMessage, isLoading, onStopGeneration, onRegenerate, selectedModel, onModelChange, language }) {
+const jellyInputVariants = {
+  visible: {
+    y: 0,
+    opacity: 1,
+    scaleY: 1,
+    scaleX: 1,
+    transition: {
+      type: "spring",
+      stiffness: 280,
+      damping: 15,
+      mass: 0.6
+    }
+  },
+  hidden: {
+    y: 90,
+    opacity: 0,
+    scaleY: 0.6,   // Peregangan vertikal (jelly) ke arah bawah
+    scaleX: 0.94,  // Penyusutan lebar horizontal
+    transition: {
+      type: "spring",
+      stiffness: 350,
+      damping: 20,
+      mass: 0.5
+    }
+  }
+};
+
+export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages, onSendMessage, onEditSendMessage, isLoading, onStopGeneration, onRegenerate, selectedModel, onModelChange, language, isMobileMenuOpen }) {
   const t = translations[language || "id"];
 
   const ALTERNATIVE_PHRASES = language === "en" ? [
@@ -896,7 +923,13 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
             </div>
 
             {/* ── Main Input Capsule/Box ── */}
-            <div className="bg-white border border-[#21302A]/15 shadow-[0_4px_24px_rgba(33,48,42,0.04)] transition-all focus-within:border-[#21302A]/30 focus-within:shadow-[0_6px_32px_rgba(33,48,42,0.08)] flex md:flex-col flex-row items-center md:items-stretch rounded-full md:rounded-[24px] p-1.5 pl-3 pr-2 md:p-2.5 md:pl-2.5 md:pr-2.5 min-h-[52px] md:min-h-[140px] w-full">
+            <motion.div 
+              variants={jellyInputVariants}
+              initial="visible"
+              animate={isMobileMenuOpen ? "hidden" : "visible"}
+              style={{ WebkitBackdropFilter: "blur(24px)" }}
+              className="bg-white/45 backdrop-blur-xl border border-[#21302A]/12 shadow-[0_12px_28px_rgba(33,48,42,0.08),_inset_0_1px_1px_rgba(255,255,255,0.9)] transition-all duration-200 focus-within:bg-white/65 focus-within:border-[#21302A]/24 focus-within:shadow-[0_16px_40px_rgba(33,48,42,0.12)] flex md:flex-col flex-row items-center md:items-stretch rounded-full md:rounded-[24px] p-1.5 pl-3 pr-2 md:p-2.5 md:pl-2.5 md:pr-2.5 min-h-[52px] md:min-h-[140px] w-full transform-gpu"
+            >
               
               {/* Mobile Left Actions (Plus button inside capsule) */}
               <button
@@ -978,17 +1011,8 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                 style={{ maxHeight: '200px' }}
               />
               
-              {/* Mobile Right Actions (Globe and Send arrow inside capsule) */}
+              {/* Mobile Right Actions (Send arrow inside capsule) */}
               <div className="md:hidden flex items-center gap-1.5 flex-shrink-0">
-                <button
-                  className="hover:text-[#21302A] text-[#21302A]/50 transition-colors p-2 rounded-full hover:bg-[#E5EBE8] active:scale-95"
-                  title={language === "en" ? "Web Search Active" : "Pencarian Web Aktif"}
-                  type="button"
-                  disabled={isLoading}
-                >
-                  <Globe className="w-4.5 h-4.5" strokeWidth={2.5} />
-                </button>
-                
                 <button
                   onClick={() => handleSend()}
                   disabled={(!inputText.trim() && attachments.length === 0) || isLoading}
@@ -1012,14 +1036,6 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                   >
                     <Plus className="w-5 h-5" strokeWidth={2.5} />
                   </button>
-                  <button
-                    className="hover:text-[#21302A] transition-colors p-2 rounded-full hover:bg-[#E5EBE8] active:scale-95"
-                    title={language === "en" ? "Web Search Active" : "Pencarian Web Aktif"}
-                    type="button"
-                    disabled={isLoading}
-                  >
-                    <Globe className="w-4 h-4" strokeWidth={2.5} />
-                  </button>
                 </div>
                 
                 <button
@@ -1033,7 +1049,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                 </button>
               </div>
               
-            </div>
+            </motion.div>
 
           </div>
 

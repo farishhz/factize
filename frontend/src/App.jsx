@@ -548,6 +548,7 @@ export default function App() {
       
       {currentView === 'chat' ? (
         <ChatArea 
+          isMobileMenuOpen={isMobileMenuOpen}
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={setIsSidebarOpen}
           onOpenInfo={() => setShowInfoModal(true)}
@@ -568,15 +569,13 @@ export default function App() {
           </div>
         </div>
       )}
-      {!isMobileMenuOpen && (
-        <MobileTopBar 
-          isOpen={isMobileMenuOpen}
-          onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          currentView={currentView}
-          onOpenInfo={() => setShowInfoModal(true)}
-          language={language}
-        />
-      )}
+      <MobileTopBar 
+        isOpen={isMobileMenuOpen}
+        onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        currentView={currentView}
+        onOpenInfo={() => setShowInfoModal(true)}
+        language={language}
+      />
       <SettingsModal 
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
