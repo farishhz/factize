@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
+import { translations } from "../services/translations";
 
 function AIAvatar() {
   return (
@@ -31,7 +32,7 @@ function ShimmerLoader({ message }) {
   );
 }
 
-function RAGSourcesAccordion({ sources }) {
+function RAGSourcesAccordion({ sources, language }) {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!sources || sources.length === 0) return null;
@@ -44,7 +45,7 @@ function RAGSourcesAccordion({ sources }) {
       >
         <span className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-[#5C6E60]" />
-          Lihat Sumber Referensi ({sources.length})
+          {language === "en" ? "View Reference Sources" : "Lihat Sumber Referensi"} ({sources.length})
         </span>
         <ChevronDown
           className={`w-4 h-4 opacity-60 transition-transform duration-200 ${
@@ -70,7 +71,7 @@ function RAGSourcesAccordion({ sources }) {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <h4 className="font-bold text-[#21302A] leading-tight">
-                      {src.title || "Referensi Tanpa Judul"}
+                      {src.title || (language === "en" ? "Untitled Reference" : "Referensi Tanpa Judul")}
                     </h4>
                     {src.href && (
                       <a
@@ -79,7 +80,7 @@ function RAGSourcesAccordion({ sources }) {
                         rel="noopener noreferrer"
                         className="text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 font-semibold flex-shrink-0"
                       >
-                        Kunjungi <ExternalLink className="w-3 h-3" />
+                        {language === "en" ? "Visit" : "Kunjungi"} <ExternalLink className="w-3 h-3" />
                       </a>
                     )}
                   </div>
@@ -109,15 +110,22 @@ const PILL =
 const ACTION_BTN = 
   "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A] transition-colors active:scale-95 leading-none";
 
-const ALTERNATIVE_PHRASES = [
-  "Apa yang ingin Anda cek hari ini?",
-  "Temukan kebenaran berita & rumor.",
-  "Verifikasi info dengan Factize AI.",
-  "Selidiki kebenaran informasi di sini.",
-  "Saring hoaks secara instan & akurat."
-];
+export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages, onSendMessage, onEditSendMessage, isLoading, onStopGeneration, onRegenerate, selectedModel, onModelChange, language }) {
+  const t = translations[language || "id"];
 
-export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages, onSendMessage, onEditSendMessage, isLoading, onStopGeneration, onRegenerate, selectedModel, onModelChange }) {
+  const ALTERNATIVE_PHRASES = language === "en" ? [
+    "What do you want to check today?",
+    "Discover the truth of news & rumors.",
+    "Verify info with Factize AI.",
+    "Investigate the truth of info here.",
+    "Filter hoaxes instantly & accurately."
+  ] : [
+    "Apa yang ingin Anda cek hari ini?",
+    "Temukan kebenaran berita & rumor.",
+    "Verifikasi info dengan Factize AI.",
+    "Selidiki kebenaran informasi di sini.",
+    "Saring hoaks secara instan & akurat."
+  ];
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [inputText, setInputText] = useState("");
   const [attachments, setAttachments] = useState([]);
@@ -181,7 +189,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
 
   const formatTime = (date) => {
     const d = new Date(date);
-    return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString(language === "en" ? "en-US" : "id-ID", { hour: "2-digit", minute: "2-digit" });
   };
 
   const handleCopy = (text) => {
@@ -260,8 +268,8 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
               <div className="w-20 h-20 bg-[#E5EBE8] rounded-full flex items-center justify-center mb-6 animate-bounce shadow-inner">
                 <UploadCloud className="w-10 h-10 text-[#21302A]" />
               </div>
-              <h2 className="text-3xl font-extrabold font-serif text-[#21302A] mb-3 tracking-tight drop-shadow-sm">Lepaskan File di Sini</h2>
-              <p className="text-[#5C6E60] font-medium bg-[#F7F4E9] px-4 py-1.5 rounded-full text-sm shadow-sm border border-[#21302A]/5">Mendukung Gambar (.jpg, .png) & PDF</p>
+              <h2 className="text-3xl font-extrabold font-serif text-[#21302A] mb-3 tracking-tight drop-shadow-sm">{t.dropFiles}</h2>
+              <p className="text-[#5C6E60] font-medium bg-[#F7F4E9] px-4 py-1.5 rounded-full text-sm shadow-sm border border-[#21302A]/5">{t.supportFiles}</p>
             </div>
           </motion.div>
         )}
@@ -276,7 +284,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
             onClick={() => setShowModelDropdown(!showModelDropdown)}
             className="flex items-center gap-1.5 bg-transparent rounded-md px-2 py-1.5 text-sm font-semibold text-[#21302A] hover:bg-[#21302A]/5 transition-colors"
           >
-            {selectedModel === 'gemini-2.5-flash' ? <><Zap className="w-4 h-4 text-amber-500" fill="currentColor" /> Flash Mode</> : <><Brain className="w-4 h-4 text-indigo-500" /> Deep Fact-Check</>}
+            {selectedModel === 'gemini-2.5-flash' ? <><Zap className="w-4 h-4 text-amber-500" fill="currentColor" /> {t.flashMode}</> : <><Brain className="w-4 h-4 text-indigo-500" /> {t.deepFactCheck}</>}
             <ChevronDown className="w-4 h-4 opacity-60 ml-1" />
           </button>
           
@@ -286,13 +294,13 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                 onClick={() => { onModelChange('gemini-2.5-flash'); setShowModelDropdown(false); }}
                 className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#F7F4E9] flex items-center gap-2 ${selectedModel === 'gemini-2.5-flash' ? 'font-bold bg-[#F7F4E9]' : ''}`}
               >
-                <Zap className="w-4 h-4 text-amber-500" fill="currentColor" /> Flash Mode <span className="ml-auto text-[10px] text-[#5C6E60]">Fast</span>
+                <Zap className="w-4 h-4 text-amber-500" fill="currentColor" /> {t.flashMode} <span className="ml-auto text-[10px] text-[#5C6E60]">{t.fast}</span>
               </button>
               <button 
                 onClick={() => { onModelChange('gemini-2.5-pro'); setShowModelDropdown(false); }}
                 className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#F7F4E9] flex items-center gap-2 ${selectedModel === 'gemini-2.5-pro' ? 'font-bold bg-[#F7F4E9]' : ''}`}
               >
-                <Brain className="w-4 h-4 text-indigo-500" /> Deep Fact-Check <span className="ml-auto text-[10px] text-[#5C6E60]">Pro</span>
+                <Brain className="w-4 h-4 text-indigo-500" /> {t.deepFactCheck} <span className="ml-auto text-[10px] text-[#5C6E60]">{t.pro}</span>
               </button>
             </div>
           )}
@@ -378,7 +386,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                         {message.streamingSources && message.streamingSources.length > 0 && (
                           <div className="w-full flex flex-col gap-1.5 font-sans select-none border-b border-[#21302A]/6 pb-3">
                             <span className="text-[10px] uppercase tracking-wider text-[#21302A]/40 font-bold">
-                              Sumber penelusuran web:
+                              {language === "en" ? "Web search sources:" : "Sumber penelusuran web:"}
                             </span>
                             <div className="flex flex-wrap gap-2">
                               {message.streamingSources.map((src, srcIdx) => (
@@ -404,7 +412,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                             </div>
                           </div>
                         )}
-                        <ShimmerLoader message={message.streamingMessage} />
+                        <ShimmerLoader message={message.streamingMessage || t.processing} />
                       </div>
                     ) : (
                       <div className="text-[15px] leading-relaxed break-words markdown-content w-full">
@@ -421,7 +429,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                                 onClick={() => setEditingMessageId(null)}
                                 className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 text-[#FFFDF6] transition-colors cursor-pointer"
                               >
-                                Batal
+                                {t.cancel}
                               </button>
                               <button
                                 onClick={() => {
@@ -432,7 +440,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                                 }}
                                 className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
                               >
-                                Simpan & Kirim
+                                {t.saveSend}
                               </button>
                             </div>
                           </div>
@@ -453,8 +461,8 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                                   return '';
                                 }).join('').trim();
 
-                                if (text.startsWith("Kesimpulan:")) {
-                                  const statusMatch = text.match(/Kesimpulan:\s*\**([A-Z\s]+)\**/i);
+                                 if (text.startsWith("Kesimpulan:") || text.startsWith("Conclusion:")) {
+                                  const statusMatch = text.match(/(?:Kesimpulan|Conclusion):\s*\**([A-Z\s]+)\**/i);
                                   if (statusMatch) {
                                     const status = statusMatch[1].trim().toUpperCase();
                                     
@@ -462,35 +470,35 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                                       bg: "from-emerald-500/12 to-emerald-600/5 text-emerald-800 border-emerald-500/20 shadow-emerald-500/5",
                                       dot: "bg-emerald-500 shadow-emerald-500/50",
                                       icon: <ShieldCheck className="w-5 h-5 text-emerald-600" />,
-                                      label: "Terverifikasi Faktual / Benar"
+                                      label: language === "en" ? "Factually Verified / True" : "Terverifikasi Faktual / Benar"
                                     };
                                     
-                                    if (status.includes("BENAR") || status.includes("FAKTA") || status.includes("ASLI") || status.includes("AMAN")) {
-                                      if (status.includes("TIDAK")) {
+                                    if (status.includes("BENAR") || status.includes("FAKTA") || status.includes("ASLI") || status.includes("AMAN") || status.includes("TRUE") || status.includes("FACT") || status.includes("GENUINE") || status.includes("SAFE")) {
+                                      if (status.includes("TIDAK") || status.includes("NOT") || status.includes("UN")) {
                                         config = {
                                           bg: "from-rose-500/12 to-rose-600/5 text-rose-800 border-rose-500/20 shadow-rose-500/5",
                                           dot: "bg-rose-500 shadow-rose-500/50 animate-pulse",
                                           icon: <AlertTriangle className="w-5 h-5 text-rose-600" />,
-                                          label: "Terindikasi Hoaks / Salah"
+                                          label: language === "en" ? "Indicated Hoax / False" : "Terindikasi Hoaks / Salah"
                                         };
                                       }
-                                    } else if (status.includes("SALAH") || status.includes("HOAKS") || status.includes("MISLEADING") || status.includes("PALSU")) {
+                                    } else if (status.includes("SALAH") || status.includes("HOAKS") || status.includes("MISLEADING") || status.includes("PALSU") || status.includes("FALSE") || status.includes("HOAX") || status.includes("FAKE")) {
                                       config = {
                                         bg: "from-rose-500/12 to-rose-600/5 text-rose-800 border-rose-500/20 shadow-rose-500/5",
                                         dot: "bg-rose-500 shadow-rose-500/50 animate-pulse",
                                         icon: <AlertTriangle className="w-5 h-5 text-rose-600" />,
-                                        label: "Terindikasi Hoaks / Salah"
+                                        label: language === "en" ? "Indicated Hoax / False" : "Terindikasi Hoaks / Salah"
                                       };
                                     } else {
                                       config = {
                                         bg: "from-amber-500/12 to-amber-600/5 text-amber-800 border-amber-500/20 shadow-amber-500/5",
                                         dot: "bg-amber-500 shadow-amber-500/50",
                                         icon: <Info className="w-5 h-5 text-amber-600" />,
-                                        label: "Informasi Tidak Dapat Diverifikasi"
+                                        label: language === "en" ? "Information Cannot Be Verified" : "Informasi Tidak Dapat Diverifikasi"
                                       };
                                     }
 
-                                    const cleanText = text.replace(/Kesimpulan:\s*\**[A-Z\s]+\**\.?\s*/i, "");
+                                    const cleanText = text.replace(/(?:Kesimpulan|Conclusion):\s*\**[A-Z\s]+\**\.?\s*/i, "");
 
                                     return (
                                       <div className="w-full flex flex-col">
@@ -506,10 +514,10 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                                             </div>
                                             <div className="flex flex-col">
                                               <span className="text-[10px] uppercase tracking-widest text-[#5C6E60]/80 font-bold leading-none mb-1">
-                                                Hasil Analisis Factize
+                                                {t.analysisTitle}
                                               </span>
                                               <span className="text-[15px] font-extrabold tracking-tight uppercase leading-tight">
-                                                KESIMPULAN: {status}
+                                                {language === "en" ? "CONCLUSION" : "KESIMPULAN"}: {status}
                                               </span>
                                             </div>
                                           </div>
@@ -537,32 +545,39 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                               h2: ({node, ...props}) => <h2 className="text-lg font-bold mb-3 mt-2" {...props} />,
                               h3: ({node, children, ...props}) => {
                                 const text = React.Children.toArray(children).map(child => typeof child === 'string' ? child : '').join('');
-                                if (text.includes("KESIMPULAN:")) {
-                                  const parts = text.split("KESIMPULAN:");
+                                if (text.includes("KESIMPULAN:") || text.includes("CONCLUSION:")) {
+                                  const parts = text.split(text.includes("KESIMPULAN:") ? "KESIMPULAN:" : "CONCLUSION:");
                                   const status = parts[1].trim().toUpperCase();
                                   
                                   let config = {
                                     bg: "from-emerald-500/12 to-emerald-600/5 text-emerald-800 border-emerald-500/20 shadow-emerald-500/5",
                                     dot: "bg-emerald-500 shadow-emerald-500/50",
                                     icon: <ShieldCheck className="w-5 h-5 text-emerald-600" />,
-                                    label: "Terverifikasi Faktual / Benar"
+                                    label: language === "en" ? "Factually Verified / True" : "Terverifikasi Faktual / Benar"
                                   };
                                   
-                                  if (status.includes("BENAR") || status.includes("FAKTA") || status.includes("ASLI") || status.includes("AMAN")) {
-                                    // Emerald Green theme
-                                  } else if (status.includes("SALAH") || status.includes("HOAKS") || status.includes("MISLEADING") || status.includes("PALSU")) {
+                                  if (status.includes("BENAR") || status.includes("FAKTA") || status.includes("ASLI") || status.includes("AMAN") || status.includes("TRUE") || status.includes("FACT") || status.includes("GENUINE") || status.includes("SAFE")) {
+                                    if (status.includes("TIDAK") || status.includes("NOT") || status.includes("UN")) {
+                                      config = {
+                                        bg: "from-rose-500/12 to-rose-600/5 text-rose-800 border-rose-500/20 shadow-rose-500/5",
+                                        dot: "bg-rose-500 shadow-rose-500/50 animate-pulse",
+                                        icon: <AlertTriangle className="w-5 h-5 text-rose-600" />,
+                                        label: language === "en" ? "Indicated Hoax / False" : "Terindikasi Hoaks / Salah"
+                                      };
+                                    }
+                                  } else if (status.includes("SALAH") || status.includes("HOAKS") || status.includes("MISLEADING") || status.includes("PALSU") || status.includes("FALSE") || status.includes("HOAX") || status.includes("FAKE")) {
                                     config = {
                                       bg: "from-rose-500/12 to-rose-600/5 text-rose-800 border-rose-500/20 shadow-rose-500/5",
                                       dot: "bg-rose-500 shadow-rose-500/50 animate-pulse",
                                       icon: <AlertTriangle className="w-5 h-5 text-rose-600" />,
-                                      label: "Terindikasi Hoaks / Salah"
+                                      label: language === "en" ? "Indicated Hoax / False" : "Terindikasi Hoaks / Salah"
                                     };
                                   } else {
                                     config = {
                                       bg: "from-amber-500/12 to-amber-600/5 text-amber-800 border-amber-500/20 shadow-amber-500/5",
                                       dot: "bg-amber-500 shadow-amber-500/50",
                                       icon: <Info className="w-5 h-5 text-amber-600" />,
-                                      label: "Informasi Tidak Dapat Diverifikasi"
+                                      label: language === "en" ? "Information Cannot Be Verified" : "Informasi Tidak Dapat Diverifikasi"
                                     };
                                   }
                                   
@@ -579,10 +594,10 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                                         </div>
                                         <div className="flex flex-col">
                                           <span className="text-[10px] uppercase tracking-widest text-[#5C6E60]/80 font-bold leading-none mb-1">
-                                            Hasil Analisis Factize
+                                            {t.analysisTitle}
                                           </span>
                                           <span className="text-[15px] font-extrabold tracking-tight uppercase leading-tight">
-                                            KESIMPULAN: {status}
+                                            {language === "en" ? "CONCLUSION" : "KESIMPULAN"}: {status}
                                           </span>
                                         </div>
                                       </div>
@@ -617,7 +632,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
 
                         {/* RAG sources accordion dropdown */}
                         {!isUser && ragSources && ragSources.length > 0 && (
-                          <RAGSourcesAccordion sources={ragSources} />
+                          <RAGSourcesAccordion sources={ragSources} language={language} />
                         )}
                       </div>
                     )}
@@ -637,14 +652,14 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                             setEditText(message.text);
                           }}
                           className="p-1 text-[#5C6E60] hover:text-[#21302A] hover:bg-[#21302A]/5 rounded-md transition-colors active:scale-90 cursor-pointer"
-                          title="Edit Perintah"
+                          title={language === "en" ? "Edit Query" : "Edit Perintah"}
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleCopy(message.text)}
                           className="p-1 text-[#5C6E60] hover:text-[#21302A] hover:bg-[#21302A]/5 rounded-md transition-colors active:scale-90 cursor-pointer"
-                          title="Salin Perintah"
+                          title={language === "en" ? "Copy Query" : "Salin Perintah"}
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
@@ -660,7 +675,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                           <button 
                             onClick={() => handleFeedback(message.id, 'up')}
                             className={`p-1 rounded-md transition-colors ${feedbackState[message.id] === 'up' ? 'text-green-600 bg-green-100' : 'text-[#5C6E60] hover:bg-[#21302A]/10 hover:text-[#21302A]'}`}
-                            title="Tanggapan Baik / Relevan"
+                            title={language === "en" ? "Good Response / Relevant" : "Tanggapan Baik / Relevan"}
                           >
                             <ThumbsUp className="w-3.5 h-3.5" />
                           </button>
@@ -668,32 +683,31 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                           <button 
                             onClick={() => handleFeedback(message.id, 'down')}
                             className={`p-1 rounded-md transition-colors ${feedbackState[message.id] === 'down' ? 'text-red-600 bg-red-100' : 'text-[#5C6E60] hover:bg-[#21302A]/10 hover:text-[#21302A]'}`}
-                            title="Tanggapan Buruk / Tidak Akurat"
+                            title={language === "en" ? "Bad Response / Inaccurate" : "Tanggapan Buruk / Tidak Akurat"}
                           >
                             <ThumbsDown className="w-3.5 h-3.5" />
                           </button>
                         </div>
 
-                        <button onClick={() => handleCopy(mainText)} className={ACTION_BTN} title="Salin Teks">
-                          <Copy className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Copy</span>
+                        <button onClick={() => handleCopy(mainText)} className={ACTION_BTN} title={language === "en" ? "Copy Text" : "Salin Teks"}>
+                          <Copy className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.copy}</span>
                         </button>
                         
                         {/* Tampilkan regenerate hanya di pesan terakhir yang BUKAN error/loading */}
                         {isLastMessage && !isLoading && onRegenerate && (
-                          <button onClick={onRegenerate} className={ACTION_BTN} title="Buat Ulang Jawaban">
-                            <RefreshCw className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Regenerate</span>
+                          <button onClick={onRegenerate} className={ACTION_BTN} title={language === "en" ? "Regenerate Response" : "Buat Ulang Jawaban"}>
+                            <RefreshCw className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.regenerate}</span>
                           </button>
                         )}
-
                         {/* Jika obrolan panjang, tampilkan opsi follow up di sini saja (kecuali pesan error) */}
                         {isLastMessage && !isLoading && hasConversation && (
                           <>
                             <div className="w-px h-3.5 bg-[#21302A]/20 mx-1"></div>
-                            <button onClick={() => handleSend("Ringkaskan lebih padat")} className={ACTION_BTN}>
-                              <AlignLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Ringkaskan</span>
+                            <button onClick={() => handleSend(language === "en" ? "Summarize briefly" : "Ringkaskan lebih padat")} className={ACTION_BTN}>
+                              <AlignLeft className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.summarize}</span>
                             </button>
-                            <button onClick={() => handleSend("Tunjukkan sumber resmi yang valid")} className={ACTION_BTN}>
-                              <ExternalLink className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sumber</span>
+                            <button onClick={() => handleSend(language === "en" ? "Show official valid sources" : "Tunjukkan sumber resmi yang valid")} className={ACTION_BTN}>
+                              <ExternalLink className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.sourceBtn}</span>
                             </button>
                           </>
                         )}
@@ -746,7 +760,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                 </AnimatePresence>
               </h2>
              <p className="text-[#5C6E60] text-[15px] md:text-[17px] text-center max-w-xl mb-12">
-                Interaksi dengan Factize untuk mengeksplorasi kebenaran di balik berita, gambar viral, atau rumor terkini.
+                {t.landingIntro}
              </p>
           </motion.div>
 
@@ -759,17 +773,17 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                 transition={{ delay: 0.1 }}
                 className="flex flex-wrap justify-center gap-2.5"
               >
-                <button onClick={() => setInputText("Cek kebenaran link berita ini: ")} className={PILL}>
+                <button onClick={() => setInputText(language === "en" ? "Check the truth of this news link: " : "Cek kebenaran link berita ini: ")} className={PILL}>
                   <LinkIcon className="w-4 h-4 text-[#5C6E60]" />
-                  <span className="text-[13px]">Link Berita</span>
+                  <span className="text-[13px]">{t.pillNews}</span>
                 </button>
-                <button onClick={() => setInputText("Tolong analisa apakah foto/video ini asli atau hasil rekayasa AI: ")} className={PILL}>
+                <button onClick={() => setInputText(language === "en" ? "Please analyze if this photo/video is genuine or AI-generated: " : "Tolong analisa apakah foto/video ini asli atau hasil rekayasa AI: ")} className={PILL}>
                   <ImageIcon className="w-4 h-4 text-[#5C6E60]" />
-                  <span className="text-[13px]">Analisa Visual</span>
+                  <span className="text-[13px]">{t.pillVisual}</span>
                 </button>
-                <button onClick={() => setInputText("Klarifikasi rumor atau isu terkini: ")} className={PILL}>
+                <button onClick={() => setInputText(language === "en" ? "Clarify this rumor or current issue: " : "Klarifikasi rumor atau isu terkini: ")} className={PILL}>
                   <TrendingUp className="w-4 h-4 text-[#5C6E60]" />
-                  <span className="text-[13px]">Klarifikasi Isu</span>
+                  <span className="text-[13px]">{t.pillClarify}</span>
                 </button>
               </motion.div>
             </div>
@@ -791,7 +805,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
               className="pointer-events-auto flex items-center gap-2 bg-[#FFFDF6] border border-[#21302A]/20 text-[#21302A] px-4 py-2 rounded-full text-xs font-semibold shadow-md hover:bg-[#F7F4E9] active:scale-95 transition-all"
             >
               <Square className="w-3.5 h-3.5 fill-current" />
-              Hentikan Pembuatan
+              {language === "en" ? "Stop Generation" : "Hentikan Pembuatan"}
             </button>
           </motion.div>
         )}
@@ -947,7 +961,6 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                 )}
               </div>
 
-              {/* Text Input Area (Responsive styling) */}
               <textarea
                 ref={inputRef}
                 value={inputText}
@@ -959,7 +972,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                 onKeyDown={handleKeyDown}
                 onPaste={handlePaste}
                 rows={1}
-                placeholder="Ketik rumor, atau tempel link..."
+                placeholder={t.inputPlaceholder}
                 className="flex-1 bg-transparent outline-none text-[#21302A] placeholder:text-[#21302A]/30 text-[15px] resize-none overflow-hidden min-h-[24px] md:min-h-[40px] px-2 py-1 md:px-3 md:pt-3 md:pb-2"
                 disabled={isLoading}
                 style={{ maxHeight: '200px' }}
@@ -969,7 +982,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
               <div className="md:hidden flex items-center gap-1.5 flex-shrink-0">
                 <button
                   className="hover:text-[#21302A] text-[#21302A]/50 transition-colors p-2 rounded-full hover:bg-[#E5EBE8] active:scale-95"
-                  title="Pencarian Web Aktif"
+                  title={language === "en" ? "Web Search Active" : "Pencarian Web Aktif"}
                   type="button"
                   disabled={isLoading}
                 >
@@ -980,7 +993,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                   onClick={() => handleSend()}
                   disabled={(!inputText.trim() && attachments.length === 0) || isLoading}
                   className="bg-[#21302A] hover:bg-[#2F4236] disabled:bg-[#F2F2F2] disabled:text-[#A0A0A0] text-[#FFFDF6] p-2 rounded-full transition-all duration-150 disabled:cursor-not-allowed active:scale-95 shadow-sm cursor-pointer"
-                  title="Kirim"
+                  title={language === "en" ? "Send" : "Kirim"}
                   type="button"
                 >
                   <ArrowUp className="w-4.5 h-4.5" strokeWidth={2.5} />
@@ -993,7 +1006,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="hover:text-[#21302A] transition-colors p-2 rounded-full hover:bg-[#E5EBE8] active:scale-95 cursor-pointer"
-                    title="Unggah file"
+                    title={language === "en" ? "Upload file" : "Unggah file"}
                     type="button"
                     disabled={isLoading}
                   >
@@ -1001,7 +1014,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                   </button>
                   <button
                     className="hover:text-[#21302A] transition-colors p-2 rounded-full hover:bg-[#E5EBE8] active:scale-95"
-                    title="Pencarian Web Aktif"
+                    title={language === "en" ? "Web Search Active" : "Pencarian Web Aktif"}
                     type="button"
                     disabled={isLoading}
                   >
@@ -1013,7 +1026,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                   onClick={() => handleSend()}
                   disabled={(!inputText.trim() && attachments.length === 0) || isLoading}
                   className="bg-[#21302A] hover:bg-[#2F4236] disabled:bg-[#F2F2F2] disabled:text-[#A0A0A0] text-[#FFFDF6] p-2 rounded-full transition-all duration-150 disabled:cursor-not-allowed active:scale-95 shadow-sm cursor-pointer"
-                  title="Kirim"
+                  title={language === "en" ? "Send" : "Kirim"}
                   type="button"
                 >
                   <ArrowUp className="w-5 h-5" strokeWidth={2.5} />
@@ -1033,7 +1046,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
             disabled={isLoading}
           />
           <p className="text-center text-[10px] text-[#21302A]/40 mt-3 font-semibold select-none tracking-wide">
-            Factize adalah AI dan dapat melakukan kesalahan.
+            {t.aiDisclaimer}
           </p>
         </div>
       </div>

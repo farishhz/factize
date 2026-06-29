@@ -1,11 +1,14 @@
 import React from "react";
 import { Menu, X, Info } from "lucide-react";
+import { translations } from "../services/translations";
 
-export function MobileTopBar({ isOpen, onToggleMenu, currentView, onOpenInfo }) {
+export function MobileTopBar({ isOpen, onToggleMenu, currentView, onOpenInfo, language }) {
+  const t = translations[language || "id"];
+
   const getTitle = () => {
-    if (currentView === "chat") return "Factize";
-    if (currentView === "detector") return "Detector AI";
-    return "Factize";
+    if (currentView === "chat") return t.title;
+    if (currentView === "detector") return language === "en" ? "AI Detector" : "Detektor AI";
+    return t.title;
   };
 
   return (

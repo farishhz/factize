@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Plus, MessageSquare, Trash2, ShieldCheck, Search, ScanLine, MessageCircle, Menu, PanelLeftClose, PanelLeftOpen, Settings, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { translations } from "../services/translations";
 
 export function Sidebar({ 
   isOpen, 
@@ -13,12 +14,15 @@ export function Sidebar({
   onViewChange, 
   onNewCheck, 
   onSelectSession, 
-  onDeleteSession 
+  onDeleteSession,
+  language
 }) {
   const [contextMenu, setContextMenu] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const menuRef = useRef(null);
+
+  const t = translations[language || "id"];
 
   const closeMenu = useCallback(() => setContextMenu(null), []);
 
@@ -52,11 +56,11 @@ export function Sidebar({
     const hours = Math.floor(diff / 3600000);
     const minutes = Math.floor(diff / 60000);
     
-    if (diff < 0) return "Baru saja";
-    if (hours > 24) return d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
-    if (hours > 0) return `${hours} jam lalu`;
-    if (minutes > 0) return `${minutes} mnt lalu`;
-    return "Baru saja";
+    if (diff < 0) return t.justNow;
+    if (hours > 24) return d.toLocaleDateString(language === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short" });
+    if (hours > 0) return `${hours} ${t.hoursAgo}`;
+    if (minutes > 0) return `${minutes} ${t.minsAgo}`;
+    return t.justNow;
   };
 
   const filteredSessions = sessions.filter(s => 
@@ -65,7 +69,7 @@ export function Sidebar({
 
   return (
     <>
-      {/* ── Collapsed Sidebar Rail View (Desktop only: visible when isOpen is false) ── */}
+      {/* ── Collapsed Sidebar Rail View (Desktop only) ── */}
       {!isOpen && (
         <div className="hidden lg:flex w-16 bg-[#EFF3F1] border-r border-[#21302A]/8 flex-col h-full items-center py-5 select-none transition-all duration-300">
           
@@ -104,7 +108,7 @@ export function Sidebar({
             
             {/* Tooltip */}
             <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#21302A] text-[#FFFDF6] text-xs px-2.5 py-1.5 rounded-md shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans z-50 font-semibold tracking-wide">
-              Buka sidebar
+              {t.openSidebar}
             </div>
           </div>
 
@@ -120,7 +124,7 @@ export function Sidebar({
               <Plus className="w-4.5 h-4.5" />
             </button>
             <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#21302A] text-[#FFFDF6] text-xs px-2.5 py-1.5 rounded-md shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans z-50 font-semibold tracking-wide">
-              Cek Fakta Baru
+              {t.newCheck}
             </div>
           </div>
 
@@ -137,7 +141,7 @@ export function Sidebar({
                 <MessageSquare className="w-4.5 h-4.5" />
               </button>
               <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#21302A] text-[#FFFDF6] text-xs px-2.5 py-1.5 rounded-md shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans z-50 font-semibold tracking-wide">
-                Chat Cek Fakta
+                {t.chatTab}
               </div>
             </div>
 
@@ -156,7 +160,7 @@ export function Sidebar({
                 <Search className="w-4.5 h-4.5" />
               </button>
               <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#21302A] text-[#FFFDF6] text-xs px-2.5 py-1.5 rounded-md shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans z-50 font-semibold tracking-wide">
-                Cari Riwayat
+                {t.historyTitle}
               </div>
             </div>
 
@@ -171,7 +175,7 @@ export function Sidebar({
                 <ScanLine className="w-4.5 h-4.5" />
               </button>
               <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#21302A] text-[#FFFDF6] text-xs px-2.5 py-1.5 rounded-md shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans z-50 font-semibold tracking-wide">
-                AI Image Detector
+                {t.detectorTab}
               </div>
             </div>
           </div>
@@ -183,12 +187,12 @@ export function Sidebar({
               <button 
                 onClick={onOpenSettings}
                 className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A]"
-                title="Pengaturan"
+                title={t.settings}
               >
                 <Settings className="w-4.5 h-4.5" />
               </button>
               <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#21302A] text-[#FFFDF6] text-xs px-2.5 py-1.5 rounded-md shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans z-50 font-semibold tracking-wide">
-                Pengaturan
+                {t.settings}
               </div>
             </div>
 
@@ -197,14 +201,14 @@ export function Sidebar({
                 <img src="/logo1.png" alt="Factize" className="w-full h-full object-cover" />
               </div>
               <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#21302A] text-[#FFFDF6] text-xs px-2.5 py-1.5 rounded-md shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans z-50 font-semibold tracking-wide">
-                Factize AI Assistant
+                {t.title} {t.assistant}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Expanded Sidebar View (Visible on mobile, or on desktop when isOpen is true) ── */}
+      {/* ── Expanded Sidebar View ── */}
       <div className={`
         ${isOpen ? 'flex' : 'flex lg:hidden'}
         w-72 xl:w-80 bg-[#EFF3F1] border-r border-[#21302A]/8 flex-col h-full transition-all duration-300
@@ -225,7 +229,7 @@ export function Sidebar({
             <button 
               onClick={() => onToggleSidebar(false)}
               className="hidden lg:flex items-center justify-center w-8 h-8 rounded-full text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A] transition-colors cursor-pointer select-none active:scale-95"
-              title="Tutup sidebar"
+              title={t.closeSidebar}
             >
               <PanelLeftClose className="w-5 h-5" />
             </button>
@@ -234,7 +238,7 @@ export function Sidebar({
             <button 
               onClick={onCloseMobileMenu}
               className="flex lg:hidden items-center justify-center w-8 h-8 rounded-full text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A] transition-colors cursor-pointer select-none active:scale-95"
-              title="Tutup menu"
+              title={t.closeMenu}
             >
               <X className="w-5 h-5" />
             </button>
@@ -250,7 +254,7 @@ export function Sidebar({
                   : 'text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A]'}`}
             >
               <MessageSquare className="w-4 h-4" />
-              Chat
+              {t.chatTab}
             </button>
             <button
               onClick={() => onViewChange('detector')}
@@ -260,7 +264,7 @@ export function Sidebar({
                   : 'text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A]'}`}
             >
               <ScanLine className="w-4 h-4" />
-              AI Image Detector
+              {t.detectorTab}
             </button>
           </div>
 
@@ -272,7 +276,7 @@ export function Sidebar({
             className="w-full bg-[#21302A] hover:bg-[#2A3A34] text-[#FFFDF6] py-3 rounded-xl flex items-center justify-center gap-2 font-medium transition-all active:scale-[0.98] shadow-sm mb-2 cursor-pointer select-none"
           >
             <Plus className="w-4 h-4" />
-            Cek Fakta Baru
+            {t.newCheck}
           </button>
           
           {/* Search bar */}
@@ -281,7 +285,7 @@ export function Sidebar({
             <input 
               id="sidebar-search-input"
               type="text" 
-              placeholder="Cari riwayat..." 
+              placeholder={t.historyTitle} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#E5EBE8] text-[#21302A] placeholder:text-[#21302A]/40 text-xs px-9 py-2.5 rounded-full outline-none focus:ring-1 ring-[#21302A]/20 transition-all"
@@ -329,43 +333,45 @@ export function Sidebar({
 
             {sessions.length === 0 && (
               <div className="text-center py-10 px-4">
-                <p className="text-xs text-[#5C6E60]">Belum ada riwayat percakapan.</p>
+                <p className="text-xs text-[#5C6E60]">{t.historyEmpty}</p>
               </div>
             )}
             
             {sessions.length > 0 && filteredSessions.length === 0 && (
               <div className="text-center py-10 px-4">
-                <p className="text-xs text-[#5C6E60]">Pencarian tidak ditemukan.</p>
+                <p className="text-xs text-[#5C6E60]">{t.searchEmpty}</p>
               </div>
             )}
           </div>
         </div>
 
         {/* AI Profile card & Settings */}
-        <div className="p-4 border-t border-[#21302A]/8 select-none flex flex-col gap-2">
-          {/* Settings Trigger */}
-          <button 
-            onClick={onOpenSettings}
-            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-semibold text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A] cursor-pointer"
-          >
-            <Settings className="w-4.5 h-4.5" />
-            Pengaturan
-          </button>
-          
+        <div className="p-4 border-t border-[#21302A]/8 select-none">
           <div className="bg-[#F4F7F6] rounded-[8px] p-3 border border-[#21302A]/8">
-            <div className="flex items-center gap-3">
-              <div className="relative flex-shrink-0">
-                <div className="w-10 h-10 rounded-[10px] flex flex-col items-center justify-center shadow-sm overflow-hidden">
-                  <img src="/logo1.png" alt="Factize" className="w-full h-full object-cover" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative flex-shrink-0">
+                  <div className="w-10 h-10 rounded-[10px] flex flex-col items-center justify-center shadow-sm overflow-hidden">
+                    <img src="/logo1.png" alt="Factize" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-[#F4F7F6] rounded-full" />
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-[#F4F7F6] rounded-full" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="font-f1 text-[#21302A] text-[15px] leading-none">Factize</span>
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="font-f1 text-[#21302A] text-[15px] leading-none">Factize</span>
+                  </div>
+                  <p className="text-[10px] text-[#5C6E60] mt-0.5 uppercase tracking-wider font-semibold">{t.assistant}</p>
                 </div>
-                <p className="text-[10px] text-[#5C6E60] mt-0.5 uppercase tracking-wider font-semibold">AI Assistant</p>
               </div>
+
+              {/* Settings Gear Button (Only Icon) */}
+              <button 
+                onClick={onOpenSettings}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A] active:scale-95 transition-all cursor-pointer"
+                title={t.settings}
+              >
+                <Settings className="w-4.5 h-4.5" />
+              </button>
             </div>
           </div>
         </div>
@@ -390,7 +396,7 @@ export function Sidebar({
               className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-[#D9534F] hover:bg-[#FDF3F3] transition-colors font-medium cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>Hapus Percakapan</span>
+              <span>{t.delete}</span>
             </button>
           </motion.div>
         )}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { X, ShieldAlert, Key, Trash2, Eye, EyeOff, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { verifyGeminiKey, verifyHfToken } from "../services/api";
+import { translations } from "../services/translations";
 
-export function SettingsModal({ isOpen, onClose, onClearHistory }) {
+export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLanguageChange }) {
   const [activeTab, setActiveTab] = useState("umum");
   const [geminiKey, setGeminiKey] = useState("");
   const [hfToken, setHfToken] = useState("");
@@ -17,6 +18,8 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
   const [hfError, setHfError] = useState("");
   
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+
+  const t = translations[language || "id"];
 
   // Load keys from localStorage on mount
   useEffect(() => {
@@ -47,7 +50,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
       setGeminiStatus("success");
     } catch (err) {
       setGeminiStatus("error");
-      setGeminiError(err.message || "Gagal memverifikasi Kunci API.");
+      setGeminiError(err.message || t.verifyKeyFailed);
     }
   };
 
@@ -65,7 +68,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
       setHfStatus("success");
     } catch (err) {
       setHfStatus("error");
-      setHfError(err.message || "Gagal memverifikasi Token Hugging Face.");
+      setHfError(err.message || t.verifyTokenFailed);
     }
   };
 
@@ -77,7 +80,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-[#21302A]/8 flex items-center justify-between bg-[#F4F7F6]">
-          <h3 className="font-semibold text-lg text-[#21302A]">Pengaturan Factize</h3>
+          <h3 className="font-semibold text-lg text-[#21302A]">{t.settingsTitle}</h3>
           <button 
             onClick={onClose}
             className="text-[#5C6E60] hover:text-[#21302A] p-1.5 hover:bg-[#21302A]/5 rounded-lg transition-colors cursor-pointer"
@@ -95,7 +98,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                 ? "border-[#21302A] text-[#21302A] bg-[#FFFDF6]" 
                 : "border-transparent text-[#5C6E60] hover:bg-[#21302A]/3"}`}
           >
-            Umum
+            {t.tabGeneral}
           </button>
           <button 
             onClick={() => setActiveTab("kunci")}
@@ -104,7 +107,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                 ? "border-[#21302A] text-[#21302A] bg-[#FFFDF6]" 
                 : "border-transparent text-[#5C6E60] hover:bg-[#21302A]/3"}`}
           >
-            Kunci API Kustom
+            {t.tabKeys}
           </button>
         </div>
 
@@ -112,10 +115,39 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
         <div className="p-6 flex-1 overflow-y-auto font-sans">
           {activeTab === "umum" && (
             <div className="space-y-6">
-              <div>
-                <h4 className="font-bold text-[#21302A] text-sm mb-2">Riwayat Percakapan</h4>
+              {/* Language Switcher */}
+              <div className="border-b border-[#21302A]/8 pb-6">
+                <h4 className="font-bold text-[#21302A] text-sm mb-1.5">{t.langSection}</h4>
                 <p className="text-xs text-[#5C6E60] mb-4 leading-relaxed font-medium">
-                  Menghapus semua riwayat percakapan yang disimpan secara lokal di peramban Anda. Tindakan ini tidak dapat dibatalkan.
+                  {t.langDesc}
+                </p>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => onLanguageChange("id")}
+                    className={`flex-1 py-3 px-4 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95
+                      ${language === "id" 
+                        ? "border-[#21302A] bg-[#21302A] text-white shadow-sm" 
+                        : "border-[#21302A]/10 bg-white text-[#5C6E60] hover:bg-[#21302A]/5"}`}
+                  >
+                    {t.langId}
+                  </button>
+                  <button 
+                    onClick={() => onLanguageChange("en")}
+                    className={`flex-1 py-3 px-4 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95
+                      ${language === "en" 
+                        ? "border-[#21302A] bg-[#21302A] text-white shadow-sm" 
+                        : "border-[#21302A]/10 bg-white text-[#5C6E60] hover:bg-[#21302A]/5"}`}
+                  >
+                    {t.langEn}
+                  </button>
+                </div>
+              </div>
+
+              {/* History Clearance */}
+              <div>
+                <h4 className="font-bold text-[#21302A] text-sm mb-2">{t.historySection}</h4>
+                <p className="text-xs text-[#5C6E60] mb-4 leading-relaxed font-medium">
+                  {t.historyDesc}
                 </p>
                 
                 {showConfirmClear ? (
@@ -123,7 +155,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                     <div className="flex items-start gap-2.5">
                       <ShieldAlert className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                       <div className="text-xs text-[#7F201C] font-semibold">
-                        Apakah Anda yakin ingin menghapus semua riwayat obrolan?
+                        {t.confirmClear}
                       </div>
                     </div>
                     <div className="flex gap-2 justify-end">
@@ -131,7 +163,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                         onClick={() => setShowConfirmClear(false)}
                         className="px-3 py-1.5 rounded-lg border border-[#21302A]/10 text-xs font-semibold hover:bg-white text-[#5C6E60] cursor-pointer"
                       >
-                        Batal
+                        {t.cancel}
                       </button>
                       <button 
                         onClick={() => {
@@ -141,7 +173,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                         className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                        Ya, Hapus Semua
+                        {t.confirmDelete}
                       </button>
                     </div>
                   </div>
@@ -151,7 +183,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                     className="flex items-center gap-2 border border-red-200 hover:border-red-300 text-red-600 bg-red-50/50 hover:bg-red-50/80 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none active:scale-[0.98]"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Hapus Semua Riwayat
+                    {t.clearHistoryBtn}
                   </button>
                 )}
               </div>
@@ -161,7 +193,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
           {activeTab === "kunci" && (
             <div className="space-y-6">
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-[11px] text-amber-800 leading-relaxed font-medium">
-                💡 **Catatan Keamanan:** Kunci API kustom Anda disimpan secara lokal di browser Anda dan hanya dikirimkan ke server backend untuk memproses chat/deteksi Anda secara aman. Jika kolom ini dibiarkan kosong, Factize akan menggunakan kunci API bawaan server (.env).
+                💡 <strong>{t.securityNoteTitle}</strong> {t.securityNoteDesc}
               </div>
 
               {/* Gemini API Key */}
@@ -174,7 +206,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                   <div className="relative flex-1">
                     <input 
                       type={showGemini ? "text" : "password"} 
-                      placeholder="Masukkan Gemini API Key Anda..." 
+                      placeholder={t.geminiPlaceholder} 
                       value={geminiKey}
                       onChange={(e) => {
                         setGeminiKey(e.target.value);
@@ -197,7 +229,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                     className="bg-[#21302A] hover:bg-[#2F4236] disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold text-xs px-4 py-3 rounded-xl flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 flex-shrink-0"
                   >
                     {geminiStatus === "loading" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    Hubungkan
+                    {t.connectBtn}
                   </button>
                 </div>
                 
@@ -205,7 +237,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                 {geminiStatus === "success" && (
                   <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
                     <CheckCircle2 className="w-3.5 h-3.5 fill-current" />
-                    Terhubung secara aman
+                    {t.connectedSecure}
                   </div>
                 )}
                 {geminiStatus === "error" && (
@@ -249,7 +281,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                     className="bg-[#21302A] hover:bg-[#2F4236] disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold text-xs px-4 py-3 rounded-xl flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 flex-shrink-0"
                   >
                     {hfStatus === "loading" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    Hubungkan
+                    {t.connectBtn}
                   </button>
                 </div>
                 
@@ -257,7 +289,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory }) {
                 {hfStatus === "success" && (
                   <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
                     <CheckCircle2 className="w-3.5 h-3.5 fill-current" />
-                    Terhubung secara aman
+                    {t.connectedSecure}
                   </div>
                 )}
                 {hfStatus === "error" && (

@@ -7,6 +7,7 @@ import { SettingsModal } from "./components/SettingsModal";
 import { chatWithBot } from "./services/api";
 import { Menu, X, Info, Brain, Zap, Globe, Cpu, ScanLine, FileSearch, AlertTriangle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { translations } from "./services/translations";
 import "./styles/index.css";
 
 
@@ -18,7 +19,15 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [hasReadToBottom, setHasReadToBottom] = useState(false);
+  const [language, setLanguage] = useState(() => localStorage.getItem("sifakta_language") || "id");
   const scrollRef = useRef(null);
+
+  const handleLanguageChange = (lang) => {
+    setLanguage(lang);
+    localStorage.setItem("sifakta_language", lang);
+  };
+
+  const t = translations[language];
 
   // Tampilkan modal info otomatis pada kunjungan pertama kali
   useEffect(() => {
@@ -534,6 +543,7 @@ export default function App() {
           onNewCheck={handleNewCheck}
           onSelectSession={handleSelectSession}
           onDeleteSession={handleDeleteSession}
+          language={language}
         />
       </div>
       
@@ -550,11 +560,12 @@ export default function App() {
           onRegenerate={handleRegenerate}
           selectedModel={selectedModel}
           onModelChange={setSelectedModel}
+          language={language}
         />
       ) : (
         <div className="flex-1 flex flex-col h-full bg-[#FFFDF6]">
           <div className="flex-1 overflow-y-auto pt-20 lg:pt-0">
-            <DetectorAI onOpenInfo={() => setShowInfoModal(true)} />
+            <DetectorAI onOpenInfo={() => setShowInfoModal(true)} language={language} />
           </div>
         </div>
       )}
@@ -564,12 +575,15 @@ export default function App() {
           onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           currentView={currentView}
           onOpenInfo={() => setShowInfoModal(true)}
+          language={language}
         />
       )}
       <SettingsModal 
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
         onClearHistory={handleClearAllHistory}
+        language={language}
+        onLanguageChange={handleLanguageChange}
       />
 
       {/* ── Info Modal (Disclosure) optimized for mobile GPU & blurs ── */}
@@ -598,8 +612,8 @@ export default function App() {
                       <Brain className="w-7 h-7 text-indigo-600" />
                     </div>
                     <div>
-                      <h3 className="font-serif font-bold text-2xl text-[#21302A]">Panduan Factize Chat</h3>
-                      <p className="text-xs text-[#5C6E60]">Asisten Verifikasi Informasi & Anti-Hoaks</p>
+                      <h3 className="font-serif font-bold text-2xl text-[#21302A]">{t.chatGuideTitle}</h3>
+                      <p className="text-xs text-[#5C6E60]">{t.chatGuideSub}</p>
                     </div>
                   </div>
 
@@ -610,44 +624,44 @@ export default function App() {
                     className="text-[#5C6E60] text-[14px] leading-relaxed space-y-5 overflow-y-auto sidebar-scroll pr-2 flex-1 scrollbar-thin"
                   >
                     <p>
-                      <strong>Factize Chat</strong> dirancang khusus sebagai ruang verifikasi klaim dan pencarian fakta. Asisten ini bekerja secara taktis dan analitis untuk membongkar hoaks di internet.
+                      {t.chatGuideIntro}
                     </p>
 
                     {/* Grid Fitur & Model */}
                     <div className="space-y-3">
                       <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
                         <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Zap className="w-4.5 h-4.5 text-amber-500" fill="currentColor"/> Gemini Flash Mode
+                          <Zap className="w-4.5 h-4.5 text-amber-500" fill="currentColor"/> {t.modelFlashTitle}
                         </h4>
                         <p className="text-xs text-[#5C6E60] leading-normal">
-                          Menggunakan model **Gemini 2.5 Flash**. Mode ini sangat cepat dan ideal untuk menganalisis teks singkat, mengekstrak data dari dokumen/gambar (OCR), serta melakukan verifikasi berita viral sehari-hari secara kilat.
+                          {t.modelFlashDesc}
                         </p>
                       </div>
 
                       <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
                         <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Brain className="w-4.5 h-4.5 text-indigo-500"/> Gemini Deep Fact-Check
+                          <Brain className="w-4.5 h-4.5 text-indigo-500"/> {t.modelProTitle}
                         </h4>
                         <p className="text-xs text-[#5C6E60] leading-normal">
-                          Menggunakan model **Gemini 2.5 Pro**. Mode ini melakukan peninjauan mendalam dengan penalaran logika tinggi. Sangat direkomendasikan untuk klaim konspirasi yang rumit, pencarian jurnal ilmiah, atau dokumen PDF tebal.
+                          {t.modelProDesc}
                         </p>
                       </div>
 
                       <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
                         <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Globe className="w-4.5 h-4.5 text-blue-500"/> Pencarian Web Real-time
+                          <Globe className="w-4.5 h-4.5 text-blue-500"/> {t.webSearchTitle}
                         </h4>
                         <p className="text-xs text-[#5C6E60] leading-normal">
-                          Dilengkapi dengan pencarian web terintegrasi secara dinamis. Sistem Factize otomatis menyuntikkan parameter waktu terkini pada pencarian internet untuk memastikan data yang dianalisis adalah data terbaru (Juni 2026).
+                          {t.webSearchDesc}
                         </p>
                       </div>
 
                       <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
                         <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Cpu className="w-4.5 h-4.5 text-emerald-600"/> Penanganan Typo Finansial & Politik
+                          <Cpu className="w-4.5 h-4.5 text-emerald-600"/> {t.typoTitle}
                         </h4>
                         <p className="text-xs text-[#5C6E60] leading-normal">
-                          Sistem kami secara otomatis mendeteksi kesalahan ketik umum di Indonesia (seperti *mcii*, *ihsg*, *prabowo ke francis*) untuk dicocokkan dengan kueri pencarian resmi yang benar sebelum dianalisis oleh AI.
+                          {t.typoDesc}
                         </p>
                       </div>
                     </div>
@@ -656,13 +670,9 @@ export default function App() {
                     <div className="bg-amber-50/70 border border-amber-200/80 p-4 rounded-2xl flex gap-3 text-amber-950 shadow-inner">
                       <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
-                        <h4 className="font-bold text-[13px] text-amber-850 mb-1">Manajemen Memori Percakapan</h4>
+                        <h4 className="font-bold text-[13px] text-amber-850 mb-1">{t.memoryTitle}</h4>
                         <p className="text-[11px] leading-relaxed text-amber-900/85">
-                          Asisten ini mengingat seluruh riwayat pesan Anda dalam sesi yang sama. Jika Anda mengajukan pertanyaan lanjutan seperti:
-                          <br />
-                          <em>"Ringkaskan lebih padat"</em>, <em>"Jelaskan poin ke-2"</em>, atau <em>"Apa sumbernya?"</em>,
-                          <br /><br />
-                          AI akan meninjau analisis sebelumnya dan memberikan kelanjutan yang relevan tanpa mengulang dari awal.
+                          {t.memoryDesc}
                         </p>
                       </div>
                     </div>
@@ -679,7 +689,7 @@ export default function App() {
                           : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
                       }`}
                     >
-                      {hasReadToBottom ? 'Saya Mengerti & Mulai Chat' : 'Harap Scroll Ke Bawah Untuk Menyetujui'}
+                      {hasReadToBottom ? t.agreeChat : t.agreeScroll}
                     </button>
                   </div>
                 </>
@@ -691,8 +701,8 @@ export default function App() {
                       <ScanLine className="w-7 h-7 text-[#21302A]" />
                     </div>
                     <div>
-                      <h3 className="font-serif font-bold text-2xl text-[#21302A]">Panduan Deteksi Truth Scan</h3>
-                      <p className="text-xs text-[#5C6E60]">Sistem Verifikasi Citra Hybrid & AI Forensik</p>
+                      <h3 className="font-serif font-bold text-2xl text-[#21302A]">{t.detectorGuideTitle}</h3>
+                      <p className="text-xs text-[#5C6E60]">{t.detectorGuideSub}</p>
                     </div>
                   </div>
 
@@ -703,35 +713,35 @@ export default function App() {
                     className="text-[#5C6E60] text-[14px] leading-relaxed space-y-5 overflow-y-auto sidebar-scroll pr-2 flex-1 scrollbar-thin"
                   >
                     <p>
-                      <strong>Truth Scan</strong> adalah fitur pintar untuk mengidentifikasi apakah suatu gambar dihasilkan oleh kecerdasan buatan (AI) atau merupakan foto jepretan kamera asli.
+                      {t.detectorGuideIntro}
                     </p>
 
                     {/* Grid Metrik */}
                     <div className="space-y-3">
                       <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
                         <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <Cpu className="w-4.5 h-4.5 text-indigo-650" /> Detektor AI Google SigLIP
+                          <Cpu className="w-4.5 h-4.5 text-indigo-650" /> {t.siglipTitle}
                         </h4>
                         <p className="text-xs text-[#5C6E60] leading-normal">
-                          Menggunakan arsitektur jaringan saraf visual tingkat lanjut (SigLIP) yang dilatih pada 120.000 citra untuk mengenali tanda tangan piksel tersembunyi yang ditinggalkan oleh generator AI seperti Midjourney, DALL-E, atau Stable Diffusion.
+                          {t.siglipDesc}
                         </p>
                       </div>
 
                       <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
                         <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <ScanLine className="w-4.5 h-4.5 text-emerald-600" /> Error Level Analysis (ELA)
+                          <ScanLine className="w-4.5 h-4.5 text-emerald-600" /> {t.elaTitle}
                         </h4>
                         <p className="text-xs text-[#5C6E60] leading-normal">
-                          Menghitung ulang tingkat kompresi piksel secara lokal. ELA menyoroti perbedaan tingkat error piksel, mempermudah Anda mendeteksi bagian gambar yang telah dimanipulasi atau disunting.
+                          {t.elaDesc}
                         </p>
                       </div>
 
                       <div className="bg-white p-3.5 rounded-2xl border border-[#21302A]/5 hover:border-[#21302A]/10 transition-all shadow-sm">
                         <h4 className="font-bold text-[#21302A] flex items-center gap-2 mb-1">
-                          <FileSearch className="w-4.5 h-4.5 text-amber-600" /> Validasi Metadata EXIF & C2PA
+                          <FileSearch className="w-4.5 h-4.5 text-amber-600" /> {t.exifTitle}
                         </h4>
                         <p className="text-xs text-[#5C6E60] leading-normal">
-                          Mengekstrak berkas metadata kriptografis untuk mendeteksi manifes C2PA (Kredensial Konten) resmi atau riwayat asal-usul berkas.
+                          {t.exifDesc}
                         </p>
                       </div>
                     </div>
@@ -740,11 +750,9 @@ export default function App() {
                     <div className="bg-amber-50/70 border border-amber-200/80 p-4 rounded-2xl flex gap-3 text-amber-950 shadow-inner">
                       <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
-                        <h4 className="font-bold text-[13px] text-amber-850 mb-1">Pemberitahuan Penting: Tangkapan Layar (Screenshot)</h4>
+                        <h4 className="font-bold text-[13px] text-amber-850 mb-1">{t.warningTitle}</h4>
                         <p className="text-[11px] leading-relaxed text-amber-900/85">
-                          Sistem ini dirancang khusus untuk membedakan <strong>foto asli dari kamera</strong> dengan <strong>foto sintetis buatan AI</strong>. 
-                          <br /><br />
-                          Gambar berupa <strong>screenshot chat, UI aplikasi, logo, atau teks murni</strong> tidak memiliki derau (noise) lensa kamera fisik. Karakteristik piksel komputer yang sangat tajam dan presisi tersebut <strong>hampir selalu diidentifikasi oleh AI sebagai Rekayasa Digital/Sintetis</strong>. Harap hanya mengunggah foto jepretan kamera untuk hasil yang akurat.
+                          {t.warningDesc}
                         </p>
                       </div>
                     </div>
@@ -761,7 +769,7 @@ export default function App() {
                           : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
                       }`}
                     >
-                      {hasReadToBottom ? 'Saya Mengerti & Mulai Scan' : 'Harap Scroll Ke Bawah Untuk Menyetujui'}
+                      {hasReadToBottom ? t.agreeScan : t.agreeScroll}
                     </button>
                   </div>
                 </>

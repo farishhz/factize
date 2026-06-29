@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import ExifReader from 'exifreader';
 import { UploadCloud, ShieldCheck, AlertTriangle, ScanLine, Image as ImageIcon, Info, Cpu, FileSearch } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { translations } from '../services/translations';
 
-export function DetectorAI({ onOpenInfo }) {
+export function DetectorAI({ onOpenInfo, language }) {
+  const t = translations[language || "id"];
   const [isDragOver, setIsDragOver] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,7 +60,7 @@ export function DetectorAI({ onOpenInfo }) {
 
   const validateAndProcess = (file) => {
     if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran gambar terlalu besar (Maksimal 5MB). Harap pilih gambar yang lebih kecil agar pemindaian tetap optimal.");
+      alert(language === "en" ? "Image size is too large (Max 5MB). Please choose a smaller image for optimal scanning." : "Ukuran gambar terlalu besar (Maksimal 5MB). Harap pilih gambar yang lebih kecil agar pemindaian tetap optimal.");
       return;
     }
     processImage(file);
@@ -110,7 +112,7 @@ export function DetectorAI({ onOpenInfo }) {
       });
       
       if (!response.ok) {
-        throw new Error("Gagal terhubung ke pemindai ELA");
+        throw new Error(language === "en" ? "Failed to connect to ELA scanner" : "Gagal terhubung ke pemindai ELA");
       }
       
       const data = await response.json();
@@ -125,7 +127,8 @@ export function DetectorAI({ onOpenInfo }) {
         setResult({
           isAI: false,
           confidence: "50%",
-          reason: "Gagal terhubung ke pemindai Error Level Analysis (Backend). Pastikan server menyala."
+          method: language === "en" ? "Error Level Analysis (ELA)" : "Error Level Analysis (ELA)",
+          reason: language === "en" ? "Failed to connect to Error Level Analysis scanner (Backend). Make sure the server is running." : "Gagal terhubung ke pemindai Error Level Analysis (Backend). Pastikan server menyala."
         });
         setIsLoading(false);
       }, 1000);
@@ -153,7 +156,7 @@ export function DetectorAI({ onOpenInfo }) {
         isAI: true,
         confidence: "95%",
         method: "Metadata (C2PA)",
-        reason: `Sistem mendeteksi tanda tangan digital generator AI (${foundKeyword.toUpperCase()}) yang tertanam pada struktur metadata C2PA / EXIF.`
+        reason: language === "en" ? `System detected AI generator digital signature (${foundKeyword.toUpperCase()}) embedded within C2PA / EXIF metadata structure.` : `Sistem mendeteksi tanda tangan digital generator AI (${foundKeyword.toUpperCase()}) yang tertanam pada struktur metadata C2PA / EXIF.`
       });
       return true;
     }
@@ -167,13 +170,13 @@ export function DetectorAI({ onOpenInfo }) {
       <div className="hidden lg:flex border-b border-[#21302A]/8 bg-[#FFFDF6] px-4 lg:px-8 py-4 flex items-center justify-between z-10 shadow-sm sticky top-0">
         <div className="flex flex-col gap-1">
           <h1 className="font-f1 text-[#21302A] text-[22px] leading-none">Truth Scan</h1>
-          <p className="text-[#5C6E60] text-sm">AI Image Detector & Metadata Scanner</p>
+          <p className="text-[#5C6E60] text-sm">{language === "en" ? "AI Image Detector & Metadata Scanner" : "Detektor Gambar AI & Pemindai Metadata"}</p>
         </div>
         <button 
           onClick={onOpenInfo}
           className="p-2 text-[#5C6E60] hover:text-[#21302A] hover:bg-[#21302A]/5 rounded-xl transition-colors flex items-center gap-2 font-medium text-sm border border-transparent hover:border-[#21302A]/10"
         >
-          <Info className="w-5 h-5" /> Info Detektor
+          <Info className="w-5 h-5" /> {language === "en" ? "Detector Info" : "Info Detektor"}
         </button>
       </div>
 
@@ -203,15 +206,15 @@ export function DetectorAI({ onOpenInfo }) {
               <div className="w-20 h-20 bg-[#E5EBE8] rounded-full flex items-center justify-center mb-2 shadow-inner">
                 <ScanLine className="w-10 h-10 text-[#21302A]" />
               </div>
-              <h2 className="text-2xl font-serif font-bold text-[#21302A]">Tarik & Lepas Gambar</h2>
-              <p className="text-[#5C6E60]">Atau <strong>Klik</strong> untuk memilih dari perangkat Anda</p>
+              <h2 className="text-2xl font-serif font-bold text-[#21302A]">{language === "en" ? "Drag & Drop Image" : "Tarik & Lepas Gambar"}</h2>
+              <p className="text-[#5C6E60]">{language === "en" ? <>Or <strong>Click</strong> to select from your device</> : <>Atau <strong>Klik</strong> untuk memilih dari perangkat Anda</>}</p>
             </div>
           ) : (
             <div className="relative w-full h-full flex flex-col sm:flex-row items-center justify-center gap-6 min-h-[250px]">
               
               {/* Gambar Asli */}
               <div className="relative flex flex-col items-center">
-                <span className="text-xs font-semibold mb-2 bg-[#21302A]/10 px-3 py-1 rounded-full text-[#21302A]">Gambar Input</span>
+                <span className="text-xs font-semibold mb-2 bg-[#21302A]/10 px-3 py-1 rounded-full text-[#21302A]">{language === "en" ? "Input Image" : "Gambar Input"}</span>
                 <img src={imageSrc} alt="Preview" className="max-w-full max-h-[300px] sm:max-h-[350px] object-contain rounded-xl shadow-md z-10" />
               </div>
 
@@ -222,7 +225,7 @@ export function DetectorAI({ onOpenInfo }) {
                   animate={{ opacity: 1, scale: 1 }}
                   className="relative flex flex-col items-center"
                 >
-                  <span className="text-xs font-semibold mb-2 bg-[#00ffcc]/20 px-3 py-1 rounded-full text-[#00a884]">Peta Noise ELA (Visualizer)</span>
+                  <span className="text-xs font-semibold mb-2 bg-[#00ffcc]/20 px-3 py-1 rounded-full text-[#00a884]">{language === "en" ? "ELA Noise Map (Visualizer)" : "Peta Noise ELA (Visualizer)"}</span>
                   <div className="relative rounded-xl overflow-hidden shadow-[0_0_20px_rgba(0,255,204,0.15)] ring-1 ring-[#00ffcc]/30">
                     <img src={result.ela_image_base64} alt="ELA Map" className="max-w-full max-h-[300px] sm:max-h-[350px] object-contain rounded-xl" />
                   </div>
@@ -240,7 +243,7 @@ export function DetectorAI({ onOpenInfo }) {
                     {/* Scanning Bar Animation */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-[#00ffcc] shadow-[0_0_15px_#00ffcc] animate-[scan_1.5s_linear_infinite]" />
                     <ScanLine className="w-12 h-12 text-[#00ffcc] mb-3 animate-pulse" />
-                    <p className="text-white font-medium tracking-wide">Memindai Jejak Digital...</p>
+                    <p className="text-white font-medium tracking-wide">{language === "en" ? "Scanning Digital Footprint..." : "Memindai Jejak Digital..."}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -261,18 +264,20 @@ export function DetectorAI({ onOpenInfo }) {
             </div>
             <div className="flex-1 flex flex-col gap-1.5">
               <h3 className={`text-xl font-bold font-serif ${result.isAI ? 'text-red-700' : 'text-green-800'}`}>
-                {result.isAI ? 'Terindikasi AI (Rekayasa Digital)' : 'Terindikasi Asli / Aman'}
+                {result.isAI 
+                  ? (language === "en" ? 'Indicated AI (Digital Manipulation)' : 'Terindikasi AI (Rekayasa Digital)') 
+                  : (language === "en" ? 'Indicated Genuine / Safe' : 'Terindikasi Asli / Aman')}
               </h3>
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-black/5 text-black/70">
-                  Tingkat Keyakinan: {result.confidence}
+                  {language === "en" ? "Confidence Level" : "Tingkat Keyakinan"}: {result.confidence}
                 </span>
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">
-                  Metode: {result.method}
+                  {language === "en" ? "Method" : "Metode"}: {result.method || (language === "en" ? "Visual Analysis" : "Analisis Visual")}
                 </span>
               </div>
               <p className={`text-[15px] mt-1.5 leading-relaxed ${result.isAI ? 'text-red-900/80' : 'text-green-900/80'}`}>
-                <strong>Analisis:</strong> {result.reason}
+                <strong>{language === "en" ? "Analysis:" : "Analisis:"}</strong> {result.reason}
               </p>
             </div>
           </motion.div>
