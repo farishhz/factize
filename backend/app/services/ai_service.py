@@ -507,7 +507,7 @@ async def analyze_chat_stream(messages, model_name='gemini-2.5-flash', custom_ap
 async def refresh_trending_hoaxes(custom_api_key=None):
     from google import genai
     from google.genai import types
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
     import asyncio
     import json
     
@@ -559,7 +559,9 @@ Gunakan Bahasa Indonesia yang komunikatif dan ramah (anti-AI slop).
         contents=prompt,
         config=types.GenerateContentConfig(
             temperature=0.3,
-            max_output_tokens=1000
+            max_output_tokens=1500,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            response_mime_type="application/json"
         )
     )
     
