@@ -105,7 +105,7 @@ function RAGSourcesAccordion({ sources, language }) {
 }
 
 const PILL =
-  "flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-[#21302A]/12 bg-[#F7F4E9] text-[#21302A] hover:bg-[#E8E4D8] transition-all duration-150 cursor-pointer select-none active:scale-[0.97]";
+  "flex-shrink-0 flex items-center gap-1 md:gap-2 px-2.5 py-1.5 md:px-4 md:py-2 rounded-full text-[10px] md:text-sm font-medium border border-[#21302A]/12 bg-[#F7F4E9] text-[#21302A] hover:bg-[#E8E4D8] transition-all duration-150 cursor-pointer select-none active:scale-[0.97]";
 
 const ACTION_BTN = 
   "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A] transition-colors active:scale-95 leading-none";
@@ -754,7 +754,7 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
 
       {/* ── Landing Page Content ── */}
       {!hasConversation && (
-        <div className="flex-1 flex flex-col justify-center relative w-full h-full pt-24 pb-20 lg:pt-10">
+        <div className="flex-1 flex flex-col justify-center relative w-full min-h-0 pt-10 pb-6 lg:pt-10 lg:pb-10">
           {/* Background Watermark Logo */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.25] z-0 overflow-hidden">
             <img src="/logo2.png" alt="Factize Watermark" className="w-[400px] h-[400px] md:w-[700px] md:h-[700px] object-contain drop-shadow-sm" />
@@ -764,11 +764,11 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="px-4 md:px-8 w-full z-10 flex flex-col items-center mt-8"
+            className="px-4 md:px-8 w-full z-10 flex flex-col items-center mt-3 md:mt-8"
             onClick={() => setShowModelDropdown(false)}
           >
               <h2 
-                className="text-[36px] md:text-[52px] font-serif text-[#21302A] mb-4 text-center tracking-tight leading-tight max-w-3xl min-h-[96px] md:min-h-[64px] flex items-center justify-center select-none cursor-default"
+                className="text-[28px] md:text-[52px] font-serif text-[#21302A] mb-3 md:mb-4 text-center tracking-tight leading-tight max-w-3xl min-h-[72px] md:min-h-[64px] flex items-center justify-center select-none cursor-default"
                 onMouseEnter={() => {
                   setPhraseIndex((prev) => (prev + 1) % ALTERNATIVE_PHRASES.length);
                 }}
@@ -786,32 +786,49 @@ export function ChatArea({ isSidebarOpen, onToggleSidebar, onOpenInfo, messages,
                   </motion.span>
                 </AnimatePresence>
               </h2>
-             <p className="text-[#5C6E60] text-[15px] md:text-[17px] text-center max-w-xl mb-12">
+             <p className="text-[#5C6E60] text-xs md:text-[17px] text-center max-w-xl mb-6 md:mb-12">
                 {t.landingIntro}
              </p>
           </motion.div>
 
           {/* ── Dynamic Quick Action Pills ── */}
-          <div className="px-4 md:px-8 pt-5 z-10 w-full" onClick={() => setShowModelDropdown(false)}>
-            <div className="max-w-3xl mx-auto flex justify-center">
+          <div className="px-4 md:px-8 pt-2 md:pt-5 z-10 w-full" onClick={() => setShowModelDropdown(false)}>
+            <div className="max-w-3xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="flex flex-wrap justify-center gap-2.5"
+                className="flex flex-col md:flex-row md:flex-wrap justify-center items-center gap-2 md:gap-2.5"
               >
-                <button onClick={() => setInputText(language === "en" ? "Check the truth of this news link: " : "Cek kebenaran link berita ini: ")} className={PILL}>
-                  <LinkIcon className="w-4 h-4 text-[#5C6E60]" />
-                  <span className="text-[13px]">{t.pillNews}</span>
-                </button>
-                <button onClick={() => setInputText(language === "en" ? "Please analyze if this photo/video is genuine or AI-generated: " : "Tolong analisa apakah foto/video ini asli atau hasil rekayasa AI: ")} className={PILL}>
-                  <ImageIcon className="w-4 h-4 text-[#5C6E60]" />
-                  <span className="text-[13px]">{t.pillVisual}</span>
-                </button>
-                <button onClick={() => setInputText(language === "en" ? "Clarify this rumor or current issue: " : "Klarifikasi rumor atau isu terkini: ")} className={PILL}>
-                  <TrendingUp className="w-4 h-4 text-[#5C6E60]" />
-                  <span className="text-[13px]">{t.pillClarify}</span>
-                </button>
+                {/* Row 1 for Mobile (side-by-side), normal flow for Desktop */}
+                <div className="flex flex-row gap-2 w-full md:w-auto justify-center">
+                  <button 
+                    onClick={() => setInputText(language === "en" ? "Verify the rumor about Kemensos social aid registration via unofficial links." : "Cek kebenaran rumor pendaftaran Bansos Kemensos lewat tautan tidak resmi.")} 
+                    className={`${PILL} flex-1 md:flex-initial justify-center text-center`}
+                  >
+                    <LinkIcon className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#5C6E60] flex-shrink-0" />
+                    <span className="text-[10px] md:text-[13px] leading-tight break-words">{t.pillBansos}</span>
+                  </button>
+                  
+                  <button 
+                    onClick={() => setInputText(language === "en" ? "What is the emergency evacuation procedure for flash floods and what is the BNPB contact number?" : "Bagaimana prosedur evakuasi darurat banjir bandang dan apa nomor kontak BNPB?")} 
+                    className={`${PILL} flex-1 md:flex-initial justify-center text-center`}
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#5C6E60] flex-shrink-0" />
+                    <span className="text-[10px] md:text-[13px] leading-tight break-words">{t.pillBencana}</span>
+                  </button>
+                </div>
+
+                {/* Row 2 for Mobile (centered), normal flow for Desktop */}
+                <div className="flex flex-row w-full md:w-auto justify-center">
+                  <button 
+                    onClick={() => setInputText(language === "en" ? "What are the document requirements for self-registration of BPJS Health services?" : "Apa saja syarat dokumen pendaftaran mandiri layanan BPJS Kesehatan?")} 
+                    className={`${PILL} w-full max-w-[260px] md:w-auto md:max-w-none justify-center text-center`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#5C6E60] flex-shrink-0" />
+                    <span className="text-[10px] md:text-[13px] leading-tight break-words">{t.pillBpjs}</span>
+                  </button>
+                </div>
               </motion.div>
             </div>
           </div>

@@ -86,3 +86,56 @@ async def scan_image(file: UploadFile = File(...), x_hf_token: Optional[str] = H
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/trending")
+def get_trending():
+    import json
+    file_path = os.path.join(os.path.dirname(__file__), "data", "trending_hoaxes.json")
+    if not os.path.exists(file_path):
+        default_data = [
+            {
+                "id": 1,
+                "title": "Tautan Pendaftaran Bansos Kemensos Google Form Rp 600rb",
+                "category": "Penipuan / Scams",
+                "severity": "high",
+                "description": "Beredar link formulir Google/situs palsu di WhatsApp untuk mengklaim bantuan sosial tunai dari Kemensos dengan meminta foto KTP dan KK.",
+                "query": "Verifikasi pesan pendaftaran bansos tunai Kemensos Rp 600.000 lewat tautan Google Form WhatsApp yang meminta data KTP."
+            },
+            {
+                "id": 2,
+                "title": "Subsidi BPJS Kesehatan Gratis Tanpa Iuran 2026",
+                "category": "Finansial / Layanan Publik",
+                "severity": "medium",
+                "description": "Pesan berantai mengklaim pemerintah memberikan subsidi BPJS gratis untuk warga berpenghasilan rendah dengan mendaftar di situs non-resmi.",
+                "query": "Cek kebenaran situs pendaftaran subsidi BPJS gratis yang meminta nomor rekening bank untuk pencairan dana bantuan."
+            },
+            {
+                "id": 3,
+                "title": "Air Kelapa & Garam Sembuhkan Demam Berdarah Instan dalam 3 Jam",
+                "category": "Kesehatan / Health",
+                "severity": "low",
+                "description": "Postingan viral di Facebook menyatakan meminum campuran air kelapa muda dan garam dapur dapat melumpuhkan virus demam berdarah secara instan.",
+                "query": "Apakah benar minum air kelapa dicampur garam dapat menyembuhkan Demam Berdarah (DBD) secara instan dalam 3 jam?"
+            }
+        ]
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(default_data, f, ensure_ascii=False, indent=2)
+        return default_data
+        
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal membaca data tren: {str(e)}")
+
+
+@app.post("/api/trending/refresh")
+async def refresh_trending(x_gemini_api_key: Optional[str] = Header(None)):
+    try:
+        from .services.ai_service import refresh_trending_hoaxes
+        updated_data = await refresh_trending_hoaxes(x_gemini_api_key)
+        return {"status": "success", "data": updated_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

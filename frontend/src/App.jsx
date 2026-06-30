@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+import { MessageSquare, ScanLine, Radio } from "lucide-react";
 import { Sidebar } from "./components/Sidebar";
 import { ChatArea } from "./components/ChatArea";
 import { DetectorAI } from "./components/DetectorAI";
+import HoaxRadar from "./components/HoaxRadar";
+import UpdatePopup from "./components/UpdatePopup";
 import { MobileTopBar } from "./components/MobileTopBar";
 import { SettingsModal } from "./components/SettingsModal";
 import { InfoModal } from "./components/InfoModal";
@@ -510,6 +513,14 @@ export default function App() {
     setIsSettingsOpen(false);
   };
 
+  const handleVerifyHoax = (query) => {
+    setCurrentView('chat');
+    handleNewCheck();
+    setTimeout(() => {
+      handleSendMessage(query);
+    }, 100);
+  };
+
   return (
     <div className="flex h-[100dvh] overflow-hidden relative font-sans bg-[#FFFDF6]">
       {isMobileMenuOpen && (
@@ -544,31 +555,37 @@ export default function App() {
           deferredPrompt={deferredPrompt}
           onInstallApp={handleInstallApp}
         />
-      </div>
-      
-      {currentView === 'chat' ? (
-        <ChatArea 
-          isMobileMenuOpen={isMobileMenuOpen}
-          isSidebarOpen={isSidebarOpen}
-          onToggleSidebar={setIsSidebarOpen}
-          onOpenInfo={() => setShowInfoModal(true)}
-          messages={messages} 
-          onSendMessage={handleSendMessage}
-          onEditSendMessage={handleEditSendMessage}
-          isLoading={isLoading}
-          onStopGeneration={handleStopGeneration}
-          onRegenerate={handleRegenerate}
-          selectedModel={selectedModel}
-          onModelChange={setSelectedModel}
-          language={language}
-        />
-      ) : (
-        <div className="flex-1 flex flex-col h-full bg-[#FFFDF6]">
-          <div className="flex-1 overflow-y-auto pt-20 lg:pt-0">
+      </div>      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        {currentView === 'chat' && (
+          <ChatArea 
+            isMobileMenuOpen={isMobileMenuOpen}
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={setIsSidebarOpen}
+            onOpenInfo={() => setShowInfoModal(true)}
+            messages={messages} 
+            onSendMessage={handleSendMessage}
+            onEditSendMessage={handleEditSendMessage}
+            isLoading={isLoading}
+            onStopGeneration={handleStopGeneration}
+            onRegenerate={handleRegenerate}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+            language={language}
+          />
+        )}
+        
+        {currentView === 'detector' && (
+          <div className="flex-1 flex flex-col h-full bg-[#FFFDF6] overflow-y-auto pt-20 lg:pt-0">
             <DetectorAI onOpenInfo={() => setShowInfoModal(true)} language={language} />
           </div>
-        </div>
-      )}
+        )}
+
+        {currentView === 'radar' && (
+          <div className="flex-1 flex flex-col h-full bg-[#FFFDF6] overflow-y-auto pt-20 lg:pt-0">
+            <HoaxRadar language={language} onVerifyHoax={handleVerifyHoax} />
+          </div>
+        )}
+      </div>
       <MobileTopBar 
         isOpen={isMobileMenuOpen}
         onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -592,6 +609,8 @@ export default function App() {
         currentView={currentView}
         language={language}
       />
+
+      <UpdatePopup language={language} onViewNow={() => setCurrentView('radar')} />
     </div>
   );
 }

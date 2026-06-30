@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, MessageSquare, Trash2, ShieldCheck, Search, ScanLine, MessageCircle, Menu, PanelLeftClose, PanelLeftOpen, Settings, X, Download, ChevronRight } from "lucide-react";
+import { Plus, MessageSquare, Trash2, ShieldCheck, Search, ScanLine, MessageCircle, Menu, PanelLeftClose, PanelLeftOpen, Settings, X, Download, ChevronRight, Radio } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { translations } from "../services/translations";
 
@@ -180,6 +180,21 @@ export function Sidebar({
                 {t.detectorTab}
               </div>
             </div>
+
+            <div className="relative group">
+              <button
+                onClick={() => onViewChange('radar')}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95 cursor-pointer
+                  ${currentView === 'radar' 
+                    ? 'bg-white shadow-sm border border-[#21302A]/5 text-[#21302A]' 
+                    : 'text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A]'}`}
+              >
+                <Radio className="w-4.5 h-4.5" />
+              </button>
+              <div className="absolute left-14 top-1/2 -translate-y-1/2 bg-[#21302A] text-[#FFFDF6] text-xs px-2.5 py-1.5 rounded-md shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none font-sans z-50 font-semibold tracking-wide">
+                {t.radarTab}
+              </div>
+            </div>
           </div>
 
           {/* Bottom: Settings & Profile */}
@@ -267,6 +282,16 @@ export function Sidebar({
             >
               <ScanLine className="w-4 h-4" />
               {t.detectorTab}
+            </button>
+            <button
+              onClick={() => onViewChange('radar')}
+              className={`flex items-center gap-2.5 px-3 py-2.5 w-full rounded-xl transition-all duration-200 text-sm font-medium cursor-pointer
+                ${currentView === 'radar' 
+                  ? 'bg-white shadow-sm border border-[#21302A]/5 text-[#21302A]' 
+                  : 'text-[#5C6E60] hover:bg-[#21302A]/5 hover:text-[#21302A]'}`}
+            >
+              <Radio className="w-4 h-4" />
+              {t.radarTab}
             </button>
           </div>
 

@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "Tautan Pendaftaran Bansos Kemensos Google Form Rp 600rb",
+    "category": "Penipuan / Scams",
+    "severity": "high",
+    "description": "Beredar link formulir Google/situs palsu di WhatsApp untuk mengklaim bantuan sosial tunai dari Kemensos dengan meminta foto KTP dan KK.",
+    "query": "Verifikasi pesan pendaftaran bansos tunai Kemensos Rp 600.000 lewat tautan Google Form WhatsApp yang meminta data KTP."
+  },
+  {
+    "id": 2,
+    "title": "Subsidi BPJS Kesehatan Gratis Tanpa Iuran 2026",
+    "category": "Finansial / Layanan Publik",
+    "severity": "medium",
+    "description": "Pesan berantai mengklaim pemerintah memberikan subsidi BPJS gratis untuk warga berpenghasilan rendah dengan mendaftar di situs non-resmi.",
+    "query": "Cek kebenaran situs pendaftaran subsidi BPJS gratis yang meminta nomor rekening bank untuk pencairan dana bantuan."
+  },
+  {
+    "id": 3,
+    "title": "Air Kelapa & Garam Sembuhkan Demam Berdarah Instan dalam 3 Jam",
+    "category": "Kesehatan / Health",
+    "severity": "low",
+    "description": "Postingan viral di Facebook menyatakan meminum campuran air kelapa muda dan garam dapur dapat melumpuhkan virus demam berdarah secara instan.",
+    "query": "Apakah benar minum air kelapa dicampur garam dapat menyembuhkan Demam Berdarah (DBD) secara instan dalam 3 jam?"
+  }
+]

@@ -299,6 +299,12 @@ Sebelum merespons, klasifikasikan input pengguna:
 - JANGAN membuat bab "Lampiran - Bukti" yang kaku di bagian paling bawah. Semua rujukan harus langsung dipasang di tubuh teks respons sesuai poin masing-masing.
 - Jika sistem menyediakan [KONTEKS PENCARIAN WEB (RAG)], gunakan URL spesifik dari konteks tersebut untuk membuat hyperlink di teks Anda. JANGAN mengarang URL atau hanya menautkan ke domain utama tanpa path lengkap jika path lengkap tersedia di referensi.
 - Jika ada saluran YouTube atau video spesifik yang dirujuk dalam klaim namun URL lengkapnya tidak ada di konteks, buatlah pencarian YouTube yang bersih (contoh: `[YouTube @AmienRaisOfficial](https://www.youtube.com/results?search_query=Amien+Rais+Official)` or `[Video "Jauhkan Istana dari Skandal Moral"](https://www.youtube.com/results?search_query=Amien+Rais+Jauhkan+Istana+dari+Skandal+Moral)`).
+
+# KHUSUS LAYANAN PUBLIK & BANTUAN SOSIAL (LKS CASE STUDY 1)
+Ketika pengguna menanyakan petunjuk birokrasi, pendaftaran, persyaratan layanan pemerintah, perlindungan anak, kebencanaan (BNPB), kesehatan (BPJS), atau verifikasi isu bantuan sosial (Kemensos):
+1. **Langkah-demi-Langkah**: Sajikan tata cara/prosedur yang rumit menjadi panduan langkah-demi-langkah (checklist) yang mudah dimengerti masyarakat.
+2. **Klarifikasi Hoaks Pendaftaran**: Selidiki dan verifikasi apakah jalur pendaftaran bantuan sosial tersebut resmi atau hoaks penipuan yang memanfaatkan situasi sulit warga.
+3. **Instansi Resmi & Kontak**: Selalu sebutkan instansi atau kementerian pemerintah yang berwenang (seperti Kemensos untuk Bansos, KPAI untuk anak, BNPB untuk bencana, Kemenkes/BPJS untuk kesehatan) beserta pranala (link) situs resminya untuk memudahkan warga menghubungi lembaga yang tepat.
 """
 
 
@@ -483,3 +489,87 @@ async def analyze_chat_stream(messages, model_name='gemini-2.5-flash', custom_ap
             rag_delimiter = "\n\n=== RAG SOURCES ===\n"
             rag_payload = json.dumps(raw_results)
             yield f"data: {json.dumps({'text': rag_delimiter + rag_payload})}\n\n"
+
+
+async def refresh_trending_hoaxes(custom_api_key=None):
+    from google import genai
+    from google.genai import types
+    from duckduckgo_search import DDGS
+    import asyncio
+    import json
+    
+    if custom_api_key:
+        client_to_use = genai.Client(api_key=custom_api_key)
+    else:
+        client_to_use = client
+        
+    if not client_to_use:
+        raise Exception("Google Gemini Client belum dikonfigurasi.")
+        
+    search_query = "hoaks bantuan sosial kesehatan bencana alam indonesia terbaru 2026 site:turnbackhoax.id OR site:kominfo.go.id"
+    print(f"Refreshing trending hoaxes, searching: {search_query}")
+    try:
+        def _search():
+            return [r for r in DDGS().text(search_query, max_results=5)]
+        results = await asyncio.to_thread(_search)
+    except Exception as e:
+        print(f"Gagal mencari hoaks untuk dashboard: {e}")
+        results = []
+        
+    search_context = ""
+    if results:
+        for r in results:
+            search_context += f"- Judul: {r.get('title')}\n  Isi: {r.get('body')}\n\n"
+    else:
+        search_context = "Tidak ada hasil pencarian terbaru."
+        
+    prompt = f"""
+Anda adalah Factize AI Assistant. Tugas Anda adalah memilah dan membuat daftar 3 tren hoaks terkini di masyarakat Indonesia berdasarkan data hasil pencarian internet berikut:
+
+{search_context}
+
+Tahun berjalan saat ini adalah 2026. Prioritaskan hoaks yang berkaitan dengan bantuan sosial, BPJS, bencana alam, perlindungan anak, atau penipuan layanan publik. 
+
+Kembalikan hasilnya dalam format JSON ARRAY murni (tanpa format markdown ```json atau sejenisnya) yang berisi tepat 3 objek hoaks dengan kunci/key berikut:
+- id: (integer, 1 sampai 3)
+- title: (string, judul singkat hoaks yang menarik dan jelas)
+- category: (string, kategori hoaks misalnya 'Penipuan / Scams', 'Kesehatan / Health', 'Layanan Publik')
+- severity: (string, tingkat bahaya: 'high', 'medium', atau 'low')
+- description: (string, ringkasan singkat isi kabar bohong tersebut secara padat, maks 150 karakter)
+- query: (string, perintah/pertanyaan verifikasi lengkap yang akan dikirimkan ke chat jika warga mengekliknya)
+
+Gunakan Bahasa Indonesia yang komunikatif dan ramah (anti-AI slop).
+"""
+    
+    response = await client_to_use.aio.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.3,
+            max_output_tokens=1000
+        )
+    )
+    
+    text_res = response.text.strip()
+    if text_res.startswith("```"):
+        lines = text_res.split("\n")
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines[-1].startswith("```"):
+            lines = lines[:-1]
+        text_res = "\n".join(lines).strip()
+        
+    try:
+        parsed_json = json.loads(text_res)
+        file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "trending_hoaxes.json")
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(parsed_json, f, ensure_ascii=False, indent=2)
+        return parsed_json
+    except Exception as je:
+        print(f"Gagal memparsing/menyimpan hasil generate tren hoaks: {je}. Response text: {text_res}")
+        raise Exception(f"Gagal menyusun data tren hoaks: {str(je)}")
+
+
+
+

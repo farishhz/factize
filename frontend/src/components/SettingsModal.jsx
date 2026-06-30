@@ -1,6 +1,6 @@
 /* global __APP_VERSION__ */
 import React, { useState, useEffect } from "react";
-import { X, ShieldAlert, Key, Trash2, Eye, EyeOff, CheckCircle2, XCircle, Loader2, MessageSquare, Globe, Image, Smartphone, Code2, Server, Brain, Fingerprint } from "lucide-react";
+import { X, ShieldAlert, Key, Trash2, Eye, EyeOff, CheckCircle2, XCircle, Loader2, MessageSquare, Globe, Image, Smartphone, Code2, Server, Brain, Fingerprint, Award } from "lucide-react";
 import { verifyGeminiKey, verifyHfToken } from "../services/api";
 import { translations } from "../services/translations";
 
@@ -362,6 +362,17 @@ export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLan
                   <p className="text-xs text-[#5C6E60] leading-relaxed font-medium">
                     {t.aboutDesc}
                   </p>
+                </div>
+
+                {/* LKS Case Study Compliance */}
+                <div className="bg-[#E5EBE8]/50 border border-[#21302A]/10 p-3.5 rounded-xl flex gap-3 items-start">
+                  <div className="p-1.5 rounded-lg bg-[#2A3A34]/10 text-[#2A3A34] flex-shrink-0 mt-0.5 animate-pulse">
+                    <Award className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <h6 className="font-bold text-xs text-[#21302A] mb-0.5">{t.lksTitle}</h6>
+                    <p className="text-[11px] text-[#5C6E60] leading-relaxed font-medium">{t.lksDesc}</p>
+                  </div>
                 </div>
 
                 {/* Key Features */}
