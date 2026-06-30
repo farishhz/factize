@@ -46,12 +46,17 @@ class VerifyTokenRequest(BaseModel):
 async def verify_gemini(request: VerifyKeyRequest):
     try:
         from google import genai
-        # Uji coba sederhana untuk memvalidasi Kunci API Gemini
         client_test = genai.Client(api_key=request.key)
         client_test.models.list()
         return {"valid": True}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e)
+        # Jika Google API sibuk/down (503), loloskan penyimpanan jika format kunci valid (diawali AIzaSy & panjang 39 karakter)
+        if "503" in error_msg or "UNAVAILABLE" in error_msg:
+            if request.key.startswith("AIzaSy") and len(request.key) == 39:
+                return {"valid": True}
+            raise HTTPException(status_code=503, detail="Layanan Google Gemini sedang sibuk/down (503). Silakan coba beberapa saat lagi.")
+        raise HTTPException(status_code=400, detail=error_msg)
 
 @app.post("/api/verify-hf")
 async def verify_hf(request: VerifyTokenRequest):
