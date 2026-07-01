@@ -3,6 +3,7 @@ import io
 import json
 from google import genai
 from google.genai import types
+from .gemini_client import generate_content_sync_with_failover
 
 # Coba import pypdf untuk ekstraksi PDF lokal jika tersedia
 try:
@@ -65,20 +66,16 @@ def perform_ocr_with_fallback(file_bytes: bytes, mime_type: str, api_key: str = 
     else:
         extracted_text = extract_text_from_image(file_bytes)
 
+
+
     if extracted_text and extracted_text.strip():
         print("Teks berhasil diekstrak menggunakan pustaka lokal.")
         return extracted_text.strip()
 
     # 2. Fallback ke Gemini Vision/Document OCR
     print("Menggunakan fallback Gemini API untuk ekstraksi teks (OCR).")
-    key_to_use = api_key if api_key else os.getenv("GEMINI_API_KEY")
-    if not key_to_use:
-        raise ValueError("Kunci API Gemini tidak ditemukan. Atur di pengaturan atau .env backend.")
-    
-    client = genai.Client(api_key=key_to_use)
-    
-    # Kirim file ke model Gemini 2.5 Flash
-    response = client.models.generate_content(
+    # Kirim file ke model Gemini 2.5 Flash via pool failover
+    response = generate_content_sync_with_failover(
         model='gemini-2.5-flash',
         contents=[
             types.Part.from_bytes(
@@ -86,7 +83,8 @@ def perform_ocr_with_fallback(file_bytes: bytes, mime_type: str, api_key: str = 
                 mime_type=mime_type,
             ),
             "Extract all readable text from this file exactly. Return only the extracted text without any summaries, comments, formatting edits, or annotations."
-        ]
+        ],
+        custom_api_key=api_key
     )
     
     text_res = response.text or ""
@@ -97,11 +95,7 @@ def verify_extracted_text(text: str, mode: str, api_key: str = None) -> dict:
     Menggunakan Gemini API untuk memverifikasi teks hasil ekstraksi OCR.
     Menerapkan mode 'screenshot' (untuk chat/news) atau 'document' (untuk UU/kebijakan).
     """
-    key_to_use = api_key if api_key else os.getenv("GEMINI_API_KEY")
-    if not key_to_use:
-        raise ValueError("Kunci API Gemini tidak ditemukan.")
-        
-    client = genai.Client(api_key=key_to_use)
+    # Kunci API divalidasi dan dijalankan secara otomatis via failover pool helper
     
     if mode == "screenshot":
         system_instruction = (
@@ -132,8 +126,8 @@ def verify_extracted_text(text: str, mode: str, api_key: str = None) -> dict:
             "}"
         )
 
-    # Panggil Gemini
-    response = client.models.generate_content(
+    # Panggil Gemini via pool failover
+    response = generate_content_sync_with_failover(
         model='gemini-2.5-flash',
         contents=[
             f"Please verify this extracted text:\n\n{text}"
@@ -141,7 +135,8 @@ def verify_extracted_text(text: str, mode: str, api_key: str = None) -> dict:
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
             response_mime_type="application/json"
-        )
+        ),
+        custom_api_key=api_key
     )
     
     try:

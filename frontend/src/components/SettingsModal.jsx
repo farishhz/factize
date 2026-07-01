@@ -4,6 +4,8 @@ import { X, ShieldAlert, Key, Trash2, Eye, EyeOff, CheckCircle2, XCircle, Loader
 import { verifyGeminiKey, verifyHfToken } from "../services/api";
 import { translations } from "../services/translations";
 
+const DISABLE_CUSTOM_KEYS = true;
+
 export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLanguageChange, deferredPrompt, onInstallApp }) {
   const [activeTab, setActiveTab] = useState("umum");
   const [geminiKey, setGeminiKey] = useState("");
@@ -101,15 +103,17 @@ export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLan
           >
             {t.tabGeneral}
           </button>
-          <button 
-            onClick={() => setActiveTab("kunci")}
-            className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer
-              ${activeTab === "kunci" 
-                ? "border-[#21302A] text-[#21302A] bg-[#FFFDF6]" 
-                : "border-transparent text-[#5C6E60] hover:bg-[#21302A]/3"}`}
-          >
-            {t.tabKeys}
-          </button>
+          {!DISABLE_CUSTOM_KEYS && (
+            <button 
+              onClick={() => setActiveTab("kunci")}
+              className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer
+                ${activeTab === "kunci" 
+                  ? "border-[#21302A] text-[#21302A] bg-[#FFFDF6]" 
+                  : "border-transparent text-[#5C6E60] hover:bg-[#21302A]/3"}`}
+            >
+              {t.tabKeys}
+            </button>
+          )}
           <button 
             onClick={() => setActiveTab("tentang")}
             className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer
@@ -225,7 +229,7 @@ export function SettingsModal({ isOpen, onClose, onClearHistory, language, onLan
             </div>
           )}
 
-          {activeTab === "kunci" && (
+          {!DISABLE_CUSTOM_KEYS && activeTab === "kunci" && (
             <div className="space-y-6">
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-[11px] text-amber-800 leading-relaxed font-medium">
                 💡 <strong>{t.securityNoteTitle}</strong> {t.securityNoteDesc}

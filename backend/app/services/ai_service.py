@@ -14,12 +14,7 @@ from ddgs import DDGS
 # Muat variabel environment dari .env
 load_dotenv(override=True)
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-if GEMINI_API_KEY and GEMINI_API_KEY != "your_gemini_api_key_here":
-    client = genai.Client(api_key=GEMINI_API_KEY)
-else:
-    client = None
+# Gemini API client is managed dynamically with failover in gemini_client.py
 
 async def ambil_isi_berita(url: str):
     headers = {
@@ -310,18 +305,7 @@ Ketika pengguna menanyakan petunjuk birokrasi, pendaftaran, persyaratan layanan 
 
 async def analyze_chat_stream(messages, model_name='gemini-2.5-flash', custom_api_key=None):
     """Fungsi asinkron untuk memproses riwayat obrolan dan mengirim stream (SSE)."""
-    if custom_api_key:
-        try:
-            client_to_use = genai.Client(api_key=custom_api_key)
-        except Exception as e:
-            yield f"data: {json.dumps({'error': f'Kunci API Gemini kustom tidak valid: {str(e)}'})}\n\n"
-            return
-    else:
-        client_to_use = client
-
-    if not client_to_use:
-        yield f"data: {json.dumps({'error': 'Sistem AI (Gemini) belum dikonfigurasi dengan API Key yang valid di file .env'})}\n\n"
-        return
+    # Dynamic client pool checks are performed inline via the failover helper
 
     needs_search = False
     # Deteksi cepat apakah kueri terakhir membutuhkan pencarian berita/hoaks di internet
@@ -331,13 +315,15 @@ async def analyze_chat_stream(messages, model_name='gemini-2.5-flash', custom_ap
             try:
                 eval_text = re.sub(r'https?://\S+|www\.\S+', '', last_msg.content).strip()
                 if eval_text:
-                    test_response = await client_to_use.aio.models.generate_content(
+                    from .gemini_client import generate_content_with_failover
+                    test_response = await generate_content_with_failover(
                         model='gemini-2.5-flash',
                         contents=f"Tentukan apakah query pengguna berikut merupakan klaim spesifik, isu, atau berita yang membutuhkan pencarian berita terkini, klarifikasi rumor, atau cek fakta hoaks di internet. Jawab 'YA' jika membutuhkan pencarian informasi berita/hoaks terbaru, atau 'TIDAK' jika query berupa obrolan biasa, kelanjutan/pernyataan konfirmasi (seperti 'tetap berikan saja', 'tidak apa-apa', 'lanjutkan', 'jelaskan'), panduan umum (seperti cara olahraga, coding, matematika, resep), atau sekadar sapaan.\nQuery: {eval_text}",
                         config=types.GenerateContentConfig(
                             max_output_tokens=5,
                             temperature=0.0
-                        )
+                        ),
+                        custom_api_key=custom_api_key
                     )
                     test_text = test_response.text.strip().upper()
                     if "YA" in test_text:
@@ -365,13 +351,12 @@ async def analyze_chat_stream(messages, model_name='gemini-2.5-flash', custom_ap
                         
                         # Gunakan OCR backend terpadu untuk menghemat token visual Gemini
                         from .ocr_service import perform_ocr_with_fallback
-                        key_to_use = custom_api_key if custom_api_key else GEMINI_API_KEY
-                        
                         # Beri tahu frontend status ekstraksi teks
                         if i == len(messages) - 1 and role == "user":
                             yield f"data: {json.dumps({'status': 'ocr', 'message': f'Membaca teks dari berkas {att.name} via OCR...' })}\n\n"
                             
-                        extracted_text = perform_ocr_with_fallback(file_bytes, mime_type, key_to_use)
+                        # Dilakukan pemanggilan secara sinkron ke OCR service
+                        extracted_text = perform_ocr_with_fallback(file_bytes, mime_type, custom_api_key)
                         
                         if extracted_text and extracted_text.strip():
                             content_text += f"\n\n[Sistem: Teks hasil pembacaan OCR pada berkas '{att.name}':]\n{extracted_text}"
@@ -464,14 +449,16 @@ async def analyze_chat_stream(messages, model_name='gemini-2.5-flash', custom_ap
         current_date = datetime.datetime.now().strftime("%A, %d %B %Y")
         dynamic_system_prompt = system_prompt + f"\n\n# CURRENT DATE & TIME AWARENESS\nTanggal hari ini adalah: {current_date}. Pastikan Anda mengetahui bahwa ini adalah masa sekarang. Jika ada artikel atau URL dengan tanggal ini atau sebelumnya, itu BUKAN berita dari masa depan."
         
-        response_stream = await client_to_use.aio.models.generate_content_stream(
+        from .gemini_client import generate_content_stream_with_failover
+        response_stream = await generate_content_stream_with_failover(
             model=model_name,
             contents=formatted_contents,
             config=types.GenerateContentConfig(
                 system_instruction=dynamic_system_prompt,
                 max_output_tokens=4000,
                 temperature=0.2,
-            )
+            ),
+            custom_api_key=custom_api_key
         )
         
         async for chunk in response_stream:
@@ -511,13 +498,7 @@ async def refresh_trending_hoaxes(custom_api_key=None):
     import asyncio
     import json
     
-    if custom_api_key:
-        client_to_use = genai.Client(api_key=custom_api_key)
-    else:
-        client_to_use = client
-        
-    if not client_to_use:
-        raise Exception("Google Gemini Client belum dikonfigurasi.")
+    # Kunci API divalidasi dan dijalankan secara otomatis via failover pool helper
         
     search_query = "hoaks bantuan sosial kesehatan bencana alam indonesia terbaru 2026 site:turnbackhoax.id OR site:kominfo.go.id"
     print(f"Refreshing trending hoaxes, searching: {search_query}")
@@ -554,7 +535,8 @@ Kembalikan hasilnya dalam format JSON ARRAY murni (tanpa format markdown ```json
 Gunakan Bahasa Indonesia yang komunikatif dan ramah (anti-AI slop).
 """
     
-    response = await client_to_use.aio.models.generate_content(
+    from .gemini_client import generate_content_with_failover
+    response = await generate_content_with_failover(
         model='gemini-2.5-flash',
         contents=prompt,
         config=types.GenerateContentConfig(
@@ -562,7 +544,8 @@ Gunakan Bahasa Indonesia yang komunikatif dan ramah (anti-AI slop).
             max_output_tokens=1500,
             thinking_config=types.ThinkingConfig(thinking_budget=0),
             response_mime_type="application/json"
-        )
+        ),
+        custom_api_key=custom_api_key
     )
     
     text_res = response.text.strip()
