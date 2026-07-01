@@ -114,7 +114,7 @@ async def verify_ocr(
                 "reason": "Tidak ada teks yang terdeteksi di dalam berkas ini."
             }
             
-        verification_result = verify_extracted_text(extracted_text, mode, x_gemini_api_key)
+        verification_result = await verify_extracted_text(extracted_text, mode, x_gemini_api_key)
         
         return {
             "success": True,
