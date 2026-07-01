@@ -57,7 +57,14 @@ async def generate_content_stream_with_failover(contents, config=None, model='ge
     last_err = None
     for idx, key in enumerate(keys):
         try:
-            client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=60_000))
+            client = genai.Client(
+                api_key=key,
+                http_options=types.HttpOptions(
+                    timeout=60_000,
+                    client_args={'http2': False},
+                    async_client_args={'http2': False}
+                )
+            )
             stream = await client.aio.models.generate_content_stream(
                 model=model,
                 contents=contents,
@@ -69,6 +76,8 @@ async def generate_content_stream_with_failover(contents, config=None, model='ge
             
             # Jika berhasil, buat wrapper generator untuk menyalurkan first_chunk lalu sisa stream
             async def stream_wrapper():
+                # Simpan referensi kuat ke client agar tidak di-Garbage Collected saat fungsi induk selesai
+                _keep_alive_client = client
                 yield first_chunk
                 async for chunk in stream_iter:
                     yield chunk
@@ -99,7 +108,14 @@ def generate_content_sync_with_failover(contents, config=None, model='gemini-2.5
     last_err = None
     for idx, key in enumerate(keys):
         try:
-            client = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=60_000))
+            client = genai.Client(
+                api_key=key,
+                http_options=types.HttpOptions(
+                    timeout=60_000,
+                    client_args={'http2': False},
+                    async_client_args={'http2': False}
+                )
+            )
             response = client.models.generate_content(
                 model=model,
                 contents=contents,
