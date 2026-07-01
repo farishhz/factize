@@ -48,6 +48,7 @@ async def generate_content_with_failover(contents, config=None, model='gemini-2.
 async def generate_content_stream_with_failover(contents, config=None, model='gemini-2.5-flash', custom_api_key=None):
     """
     Menjalankan generate_content_stream secara ASYNC dengan rotasi kunci otomatis.
+    Menggunakan pre-fetching chunk pertama untuk mendeteksi error limit (429) sejak awal.
     """
     keys = get_api_keys(custom_api_key)
     if not keys:
@@ -62,10 +63,26 @@ async def generate_content_stream_with_failover(contents, config=None, model='ge
                 contents=contents,
                 config=config
             )
-            print(f"[Gemini API Stream] Inisiasi sukses menggunakan Kunci API ke-{idx+1}")
-            return stream
+            # Uji inisiasi stream dengan memicu fetch chunk pertama
+            stream_iter = stream.__aiter__()
+            first_chunk = await stream_iter.__anext__()
+            
+            # Jika berhasil, buat wrapper generator untuk menyalurkan first_chunk lalu sisa stream
+            async def stream_wrapper():
+                yield first_chunk
+                async for chunk in stream_iter:
+                    yield chunk
+            
+            print(f"[Gemini API Stream] Inisiasi & uji sukses menggunakan Kunci API ke-{idx+1}")
+            return stream_wrapper()
+        except StopAsyncIteration:
+            # Kasus stream kosong (sukses tapi tidak ada data)
+            async def empty_stream():
+                if False:
+                    yield None
+            return empty_stream()
         except Exception as e:
-            print(f"[Gemini API Stream Failover] Kunci API ke-{idx+1} gagal: {e}")
+            print(f"[Gemini API Stream Failover] Kunci API ke-{idx+1} gagal saat inisiasi/uji: {e}")
             last_err = e
             continue
             
