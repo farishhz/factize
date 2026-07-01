@@ -95,34 +95,47 @@ def verify_extracted_text(text: str, mode: str, api_key: str = None) -> dict:
     Menggunakan Gemini API untuk memverifikasi teks hasil ekstraksi OCR.
     Menerapkan mode 'screenshot' (untuk chat/news) atau 'document' (untuk UU/kebijakan).
     """
-    # Kunci API divalidasi dan dijalankan secara otomatis via failover pool helper
+    import datetime
+    import re
     
+    today = datetime.date.today()
+    hari_dict = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+    bulan_dict = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+    
+    day_name = hari_dict[today.weekday()]
+    month_name = bulan_dict[today.month - 1]
+    formatted_date = f"{day_name}, {today.day:02d} {month_name} {today.year}"
+
     if mode == "screenshot":
         system_instruction = (
-            "You are Factize Screenshot Forensics Agent. Your task is to analyze the extracted text from a screenshot "
-            "(which represents a digital news article headline or a chat platform screenshot like WhatsApp/Telegram). "
-            "Examine if the text indicates any editorial manipulation (e.g. fake dates, fabricated headlines, modified chat logs, "
-            "or rumors commonly spread in Indonesia). Check against real world facts. "
-            "You must return a JSON response matching this EXACT structure (no markdown formatting, no prefix/suffix, just raw json): "
+            f"Anda adalah Agen Forensik Tangkapan Layar Factize. Hari ini adalah {formatted_date}.\n"
+            "Tugas Anda adalah menganalisis teks hasil ekstraksi tangkapan layar (screenshot berita digital atau chat seperti WA/Telegram).\n"
+            "Periksa apakah teks tersebut mengandung informasi palsu (hoax), judul berita hasil manipulasi edit gambar, atau klaim bohong.\n"
+            "Bandingkan dengan fakta dunia nyata. Gunakan hari ini ({formatted_date}) sebagai patokan waktu saat menilai apakah suatu tanggal berada di masa depan atau masa lalu.\n"
+            "Jika terbukti bahwa informasi tersebut adalah hoax/manipulasi/tidak sesuai fakta resmi, maka klasifikasikan 'isManipulated': true.\n"
+            "Anda wajib mengembalikan respon JSON mentah (tanpa format markdown ```json, tanpa pembuka/penutup) dengan struktur berikut:\n"
             "{\n"
             "  \"isManipulated\": true/false,\n"
-            "  \"confidence\": \"92.5%\",\n"
-            "  \"sourceMatch\": \"matching source title or None\",\n"
-            "  \"analysis\": \"detailed explanation of the analysis, including discrepancies or fake news patterns identified in Indonesian language.\"\n"
+            "  \"confidence\": \"95.0%\",\n"
+            "  \"sourceMatch\": \"Nama media berita resmi/sumber rujukan atau 'Tidak Ditemukan'\",\n"
+            "  \"analysis\": \"Berikan penjelasan fakta yang sangat RAPI, DETAIL, dan TERSTRUKTUR dalam Bahasa Indonesia. Gunakan paragraf yang jelas. "
+            "Gunakan format daftar poin-poin menggunakan tanda dash (-) untuk menyebutkan rincian fakta atau kejanggalan agar mudah dibaca.\"\n"
             "}"
         )
     else:  # mode == "document"
         system_instruction = (
-            "You are Factize Document Policy Verification Agent. Your task is to analyze the extracted text from a document "
-            "(e.g., government official regulations, official letters, laws, or public policies in Indonesia). "
-            "Assess if the clauses, text paragraphs, or statements are authentic or if they have been twisted/misrepresented/falsified. "
-            "Identify missing key sections or contextual omissions. "
-            "You must return a JSON response matching this EXACT structure (no markdown formatting, no prefix/suffix, just raw json): "
+            f"Anda adalah Agen Verifikasi Kebijakan Dokumen Factize. Hari ini adalah {formatted_date}.\n"
+            "Tugas Anda adalah menganalisis teks dari dokumen resmi (PDF undang-undang, keputusan pemerintah, peraturan tertulis).\n"
+            "Evaluasi apakah aturan atau pasal-pasal di dalamnya asli dan sesuai dengan regulasi resmi negara Indonesia, "
+            "atau jika ada pasal yang dipelintir, diubah, disunting secara sepihak, atau dipalsukan.\n"
+            "Jika ada manipulasi teks/pasal, klasifikasikan 'isManipulated': true.\n"
+            "Anda wajib mengembalikan respon JSON mentah (tanpa format markdown ```json, tanpa pembuka/penutup) dengan struktur berikut:\n"
             "{\n"
             "  \"isManipulated\": true/false,\n"
-            "  \"confidence\": \"85.0%\",\n"
-            "  \"sourceMatch\": \"Official Law/Regulation Name or None\",\n"
-            "  \"analysis\": \"detailed clause-by-clause or fact analysis explaining what parts are true, distorted, or edited, written in Indonesian language.\"\n"
+            "  \"confidence\": \"90.0%\",\n"
+            "  \"sourceMatch\": \"Nama regulasi/pasal resmi terkait atau 'Tidak Ditemukan'\",\n"
+            "  \"analysis\": \"Berikan penjelasan fakta hukum yang sangat RAPI, DETAIL, dan TERSTRUKTUR dalam Bahasa Indonesia. Gunakan paragraf yang jelas. "
+            "Gunakan format daftar poin-poin menggunakan tanda dash (-) untuk memaparkan pasal yang asli vs pasal yang dipelintir.\"\n"
             "}"
         )
 
@@ -139,20 +152,25 @@ def verify_extracted_text(text: str, mode: str, api_key: str = None) -> dict:
         custom_api_key=api_key
     )
     
+    raw_text = response.text.strip()
+    if raw_text.startswith("```"):
+        raw_text = re.sub(r'^```(?:json)?\n', '', raw_text)
+        raw_text = re.sub(r'\n```$', '', raw_text)
+        raw_text = raw_text.strip()
+
     try:
-        res_json = json.loads(response.text)
+        res_json = json.loads(raw_text)
         return res_json
     except Exception as e:
         print(f"Failed to parse Gemini OCR JSON response: {e}, raw: {response.text}")
-        import re
-        is_manip = "true" in response.text.lower()
-        conf_match = re.search(r'"confidence":\s*"([^"]+)"', response.text)
-        src_match = re.search(r'"sourceMatch":\s*"([^"]+)"', response.text)
-        analysis_match = re.search(r'"analysis":\s*"([^"]+)"', response.text)
+        is_manip = "true" in raw_text.lower()
+        conf_match = re.search(r'"confidence":\s*"([^"]+)"', raw_text)
+        src_match = re.search(r'"sourceMatch":\s*"([^"]+)"', raw_text)
+        analysis_match = re.search(r'"analysis":\s*"([^"]+)"', raw_text)
         
         return {
             "isManipulated": is_manip,
             "confidence": conf_match.group(1) if conf_match else "75.0%",
-            "sourceMatch": src_match.group(1) if src_match else "None",
-            "analysis": analysis_match.group(1) if analysis_match else response.text
+            "sourceMatch": src_match.group(1) if src_match else "Tidak Ditemukan",
+            "analysis": analysis_match.group(1) if analysis_match else raw_text
         }

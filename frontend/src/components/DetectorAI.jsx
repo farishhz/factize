@@ -3,6 +3,7 @@ import ExifReader from 'exifreader';
 import { UploadCloud, ShieldCheck, AlertTriangle, ScanLine, Image as ImageIcon, Info, Cpu, FileSearch, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { translations } from '../services/translations';
+import ReactMarkdown from 'react-markdown';
 
 export function DetectorAI({ onOpenInfo, language }) {
   const t = translations[language || "id"];
@@ -464,9 +465,21 @@ export function DetectorAI({ onOpenInfo, language }) {
                     {language === "en" ? "Method" : "Metode"}: {result.method || "Visual Analysis"}
                   </span>
                 </div>
-                <p className={`text-[15px] mt-1.5 leading-relaxed ${result.isAI ? 'text-red-900/80' : 'text-green-900/80'}`}>
-                  <strong>{language === "en" ? "Analysis:" : "Analisis:"}</strong> {result.reason}
-                </p>
+                <div className={`text-[15px] mt-1.5 leading-relaxed ${result.isAI ? 'text-red-900/80' : 'text-green-900/80'}`}>
+                  <strong className="block mb-1">{language === "en" ? "Analysis:" : "Analisis:"}</strong>
+                  <div className="font-sans">
+                    <ReactMarkdown
+                      components={{
+                        ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2 space-y-1.5" {...props} />,
+                        ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-2 space-y-1.5" {...props} />,
+                        li: ({node, ...props}) => <li className="text-sm leading-relaxed" {...props} />,
+                        p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />
+                      }}
+                    >
+                      {result.reason}
+                    </ReactMarkdown>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )
@@ -501,9 +514,21 @@ export function DetectorAI({ onOpenInfo, language }) {
                     </span>
                   )}
                 </div>
-                <p className={`text-[15px] mt-1.5 leading-relaxed ${result.isManipulated ? 'text-red-900/80' : 'text-green-900/80'}`}>
-                  <strong>{t.ocrVerdictAnalysis}:</strong> {result.analysis}
-                </p>
+                <div className={`text-[15px] mt-1.5 leading-relaxed ${result.isManipulated ? 'text-red-900/80' : 'text-green-900/80'}`}>
+                  <strong className="block mb-1">{t.ocrVerdictAnalysis}:</strong>
+                  <div className="font-sans">
+                    <ReactMarkdown
+                      components={{
+                        ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2 space-y-1.5" {...props} />,
+                        ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-2 space-y-1.5" {...props} />,
+                        li: ({node, ...props}) => <li className="text-sm leading-relaxed" {...props} />,
+                        p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />
+                      }}
+                    >
+                      {result.analysis}
+                    </ReactMarkdown>
+                  </div>
+                </div>
               </div>
             </div>
 
